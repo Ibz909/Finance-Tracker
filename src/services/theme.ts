@@ -19,9 +19,7 @@ export function isThemePreference(value: unknown): value is ThemePreference {
  * being unavailable, e.g. blocked by privacy settings) falls back to the
  * default rather than throwing.
  */
-export function readThemePreference(
-  storage: Storage | undefined = safeLocalStorage(),
-): ThemePreference {
+export function readThemePreference(storage: Storage | null = safeLocalStorage()): ThemePreference {
   try {
     const value = storage?.getItem(STORAGE_KEYS.theme);
     return isThemePreference(value) ? value : DEFAULT_THEME_PREFERENCE;
@@ -33,7 +31,7 @@ export function readThemePreference(
 /** Saves the preference. Returns false if it could not be stored. */
 export function writeThemePreference(
   preference: ThemePreference,
-  storage: Storage | undefined = safeLocalStorage(),
+  storage: Storage | null = safeLocalStorage(),
 ): boolean {
   try {
     if (!storage) return false;
@@ -61,11 +59,11 @@ export function applyTheme(
   root.style.colorScheme = theme;
 }
 
-function safeLocalStorage(): Storage | undefined {
+function safeLocalStorage(): Storage | null {
   try {
     return window.localStorage;
   } catch {
     // Accessing localStorage itself can throw (e.g. some privacy modes).
-    return undefined;
+    return null;
   }
 }
