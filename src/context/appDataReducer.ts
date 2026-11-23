@@ -1,4 +1,5 @@
 import type { AppData } from '../models/appData';
+import type { Budget } from '../models/budget';
 import { createEmptyAppData } from '../models/appData';
 import type { Transaction, TransactionDraft } from '../models/transaction';
 
@@ -11,6 +12,10 @@ export type AppDataAction =
   | { type: 'transactionAdded'; transaction: Transaction }
   | { type: 'transactionUpdated'; id: string; changes: TransactionDraft; updatedAt: string }
   | { type: 'transactionDeleted'; id: string }
+  | { type: 'budgetAdded'; budget: Budget }
+  /** Only the limit can change; what a budget is for is fixed once created. */
+  | { type: 'budgetUpdated'; id: string; limitPence: number; updatedAt: string }
+  | { type: 'budgetDeleted'; id: string }
   /** Replaces any existing demo records with these; real records are untouched. */
   | { type: 'demoDataLoaded'; transactions: Transaction[] }
   /** Removes every record flagged isDemo, and nothing else. */
@@ -39,6 +44,26 @@ export function appDataReducer(state: AppData, action: AppDataAction): AppData {
       const transactions = state.transactions.filter((t) => t.id !== action.id);
       // Same reference when nothing changed, so nothing is re-saved or re-rendered.
       return transactions.length === state.transactions.length ? state : { ...state, transactions };
+    }
+
+    case 'budgetAdded':
+      return { ...state, budgets: [...state.budgets, action.budget] };
+
+    case 'budgetUpdated': {
+      if (!state.budgets.some((b) => b.id === action.id)) return state;
+      return {
+        ...state,
+        budgets: state.budgets.map((b) =>
+          b.id === action.id
+            ? { ...b, limitPence: action.limitPence, updatedAt: action.updatedAt }
+            : b,
+        ),
+      };
+    }
+
+    case 'budgetDeleted': {
+      const budgets = state.budgets.filter((b) => b.id !== action.id);
+      return budgets.length === state.budgets.length ? state : { ...state, budgets };
     }
 
     case 'demoDataLoaded':

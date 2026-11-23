@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AppData } from '../models/appData';
 import { createEmptyAppData } from '../models/appData';
 import type { TransactionDraft } from '../models/transaction';
-import { makeTransaction } from '../test/fixtures';
+import { makeBudget, makeTransaction } from '../test/fixtures';
 import { appDataReducer } from './appDataReducer';
 
 function stateWith(...transactions: AppData['transactions']): AppData {
@@ -131,5 +131,45 @@ describe('demo data actions', () => {
   it('keeps the same state object when there is no demo data to clear', () => {
     const before = stateWith(real);
     expect(appDataReducer(before, { type: 'demoDataCleared' })).toBe(before);
+  });
+});
+
+describe('budget actions', () => {
+  const groceries = makeBudget({ id: 'b-groceries', limitPence: 30000 });
+  const base = { ...createEmptyAppData(), budgets: [groceries] };
+
+  it('adds a budget', () => {
+    const overall = makeBudget({ id: 'b-overall', scope: 'overall' });
+    expect(appDataReducer(base, { type: 'budgetAdded', budget: overall }).budgets).toEqual([
+      groceries,
+      overall,
+    ]);
+  });
+
+  it('updates only the limit and timestamp', () => {
+    const after = appDataReducer(base, {
+      type: 'budgetUpdated',
+      id: 'b-groceries',
+      limitPence: 45000,
+      updatedAt: '2026-12-01T00:00:00.000Z',
+    });
+    expect(after.budgets[0]).toEqual({
+      ...groceries,
+      limitPence: 45000,
+      updatedAt: '2026-12-01T00:00:00.000Z',
+    });
+  });
+
+  it('deletes a budget, and returns the same state when nothing matches', () => {
+    expect(appDataReducer(base, { type: 'budgetDeleted', id: 'b-groceries' }).budgets).toEqual([]);
+    expect(appDataReducer(base, { type: 'budgetDeleted', id: 'missing' })).toBe(base);
+    expect(
+      appDataReducer(base, {
+        type: 'budgetUpdated',
+        id: 'missing',
+        limitPence: 1,
+        updatedAt: '2026-12-01T00:00:00.000Z',
+      }),
+    ).toBe(base);
   });
 });
