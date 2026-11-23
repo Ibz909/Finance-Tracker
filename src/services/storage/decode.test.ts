@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { makeBudget, makeTransaction } from '../../test/fixtures';
+import { makeBudget, makeSchedule, makeTransaction } from '../../test/fixtures';
 import { decodeAppData } from './decode';
 import { CURRENT_SCHEMA_VERSION } from './envelope';
 
@@ -9,6 +9,7 @@ function envelope(data: unknown, schemaVersion = CURRENT_SCHEMA_VERSION) {
 
 const settings = { currency: 'GBP' };
 const budgets: unknown[] = [];
+const recurringSchedules: unknown[] = [];
 
 describe('decodeAppData', () => {
   it('accepts fully valid data', () => {
@@ -16,9 +17,11 @@ describe('decodeAppData', () => {
       makeTransaction(),
       makeTransaction({ type: 'income', categoryId: 'salary' }),
     ];
-    expect(decodeAppData(envelope({ transactions, budgets, settings }))).toEqual({
+    expect(
+      decodeAppData(envelope({ transactions, budgets, recurringSchedules, settings })),
+    ).toEqual({
       kind: 'valid',
-      data: { transactions, budgets, settings },
+      data: { transactions, budgets, recurringSchedules, settings },
     });
   });
 
@@ -47,6 +50,7 @@ describe('decodeAppData', () => {
       envelope({
         transactions: [good, { ...makeTransaction(), amountPence: -5 }, 'garbage'],
         budgets,
+        recurringSchedules,
         settings,
       }),
     );
@@ -61,7 +65,9 @@ describe('decodeAppData', () => {
   it('skips duplicate IDs, keeping the first', () => {
     const first = makeTransaction({ id: 'dup', description: 'First' });
     const second = makeTransaction({ id: 'dup', description: 'Second' });
-    const result = decodeAppData(envelope({ transactions: [first, second], budgets, settings }));
+    const result = decodeAppData(
+      envelope({ transactions: [first, second], budgets, recurringSchedules, settings }),
+    );
 
     expect(result).toMatchObject({ kind: 'partial', skippedRecords: 1 });
     if (result.kind === 'partial') expect(result.data.transactions).toEqual([first]);
@@ -70,12 +76,12 @@ describe('decodeAppData', () => {
   it('resets invalid settings but keeps transactions', () => {
     const transactions = [makeTransaction()];
     const result = decodeAppData(
-      envelope({ transactions, budgets, settings: { currency: 'USD' } }),
+      envelope({ transactions, budgets, recurringSchedules, settings: { currency: 'USD' } }),
     );
 
     expect(result).toMatchObject({ kind: 'partial', skippedRecords: 0 });
     if (result.kind === 'partial') {
-      expect(result.data).toEqual({ transactions, budgets, settings });
+      expect(result.data).toEqual({ transactions, budgets, recurringSchedules: [], settings });
       expect(result.problem).toMatch(/Settings were invalid/);
     }
   });
@@ -84,7 +90,46 @@ describe('decodeAppData', () => {
     const transactions = [makeTransaction()];
     const result = decodeAppData({ schemaVersion: 1, data: { transactions, settings } });
 
-    expect(result).toEqual({ kind: 'valid', data: { transactions, budgets: [], settings } });
+    expect(result).toEqual({
+      kind: 'valid',
+      data: { transactions, budgets: [], recurringSchedules: [], settings },
+    });
+  });
+
+  it('upgrades version 2 data, which had no recurring schedules', () => {
+    const budgets = [makeBudget()];
+    const result = decodeAppData({
+      schemaVersion: 2,
+      data: { transactions: [], budgets, settings },
+    });
+
+    expect(result).toEqual({
+      kind: 'valid',
+      data: { transactions: [], budgets, recurringSchedules: [], settings },
+    });
+  });
+
+  it('keeps valid recurring schedules and skips invalid or duplicate ones', () => {
+    const rent = makeSchedule({ id: 's1' });
+    const result = decodeAppData(
+      envelope({
+        transactions: [],
+        budgets: [],
+        recurringSchedules: [
+          rent,
+          makeSchedule({ id: 's1' }), // duplicate ID
+          makeSchedule({ id: 's2', frequency: 'daily' as never }),
+          makeSchedule({ id: 's3', startDate: '2026-05-01', endDate: '2026-04-01' }),
+        ],
+        settings,
+      }),
+    );
+
+    expect(result).toMatchObject({ kind: 'partial', skippedRecords: 3 });
+    if (result.kind === 'partial') {
+      expect(result.data.recurringSchedules).toEqual([rent]);
+      expect(result.problem).toMatch(/3 saved recurring transactions were invalid/);
+    }
   });
 
   it('keeps valid budgets and skips invalid or duplicate ones', () => {
@@ -101,6 +146,7 @@ describe('decodeAppData', () => {
           makeBudget({ id: 'b5', scope: 'category', categoryId: 'salary' }), // income category
           { ...makeBudget({ id: 'b6' }), limitPence: 0 },
         ],
+        recurringSchedules,
         settings,
       }),
     );

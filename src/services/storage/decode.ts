@@ -3,6 +3,8 @@ import type { AppData } from '../../models/appData';
 import type { Budget } from '../../models/budget';
 import { budgetKey, budgetSchema } from '../../models/budget';
 import { createEmptyAppData } from '../../models/appData';
+import type { RecurringSchedule } from '../../models/recurring';
+import { recurringScheduleSchema } from '../../models/recurring';
 import { settingsSchema } from '../../models/settings';
 import type { Transaction } from '../../models/transaction';
 import { transactionSchema } from '../../models/transaction';
@@ -20,6 +22,7 @@ export type DecodeResult =
 const dataShapeSchema = z.object({
   transactions: z.array(z.unknown()),
   budgets: z.array(z.unknown()),
+  recurringSchedules: z.array(z.unknown()),
   settings: z.unknown(),
 });
 
@@ -75,14 +78,29 @@ export function decodeAppData(raw: unknown): DecodeResult {
     }
   }
 
+  const recurringSchedules: RecurringSchedule[] = [];
+  const seenScheduleIds = new Set<string>();
+  let skippedSchedules = 0;
+
+  for (const candidate of shape.data.recurringSchedules) {
+    const parsed = recurringScheduleSchema.safeParse(candidate);
+    if (parsed.success && !seenScheduleIds.has(parsed.data.id)) {
+      seenScheduleIds.add(parsed.data.id);
+      recurringSchedules.push(parsed.data);
+    } else {
+      skippedSchedules++;
+    }
+  }
+
   const settings = settingsSchema.safeParse(shape.data.settings);
   const data: AppData = {
     transactions,
     budgets,
+    recurringSchedules,
     settings: settings.success ? settings.data : createEmptyAppData().settings,
   };
 
-  const skippedRecords = skippedTransactions + skippedBudgets;
+  const skippedRecords = skippedTransactions + skippedBudgets + skippedSchedules;
   const problems: string[] = [];
   if (skippedTransactions > 0) {
     problems.push(
@@ -92,6 +110,11 @@ export function decodeAppData(raw: unknown): DecodeResult {
   if (skippedBudgets > 0) {
     problems.push(
       `${String(skippedBudgets)} saved budget${skippedBudgets === 1 ? ' was' : 's were'} invalid or duplicated and skipped.`,
+    );
+  }
+  if (skippedSchedules > 0) {
+    problems.push(
+      `${String(skippedSchedules)} saved recurring transaction${skippedSchedules === 1 ? ' was' : 's were'} invalid and skipped.`,
     );
   }
   if (!settings.success) problems.push('Settings were invalid and have been reset.');

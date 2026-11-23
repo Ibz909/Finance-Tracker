@@ -9,9 +9,11 @@ export type Migration = (data: unknown) => unknown;
  *
  * History:
  *   1 → 2  Budgets added: start with an empty list.
+ *   2 → 3  Recurring schedules added: start with an empty list.
  */
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   1: (data) => (isRecord(data) ? { ...data, budgets: [] } : data),
+  2: (data) => (isRecord(data) ? { ...data, recurringSchedules: [] } : data),
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
