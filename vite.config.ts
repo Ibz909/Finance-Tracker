@@ -9,5 +9,8 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: false,
     restoreMocks: true,
+    // A timezone behind UTC, so any accidental UTC date conversion shifts
+    // a date by a day and fails a test instead of passing on a UK machine.
+    env: { TZ: 'America/Los_Angeles' },
   },
 });

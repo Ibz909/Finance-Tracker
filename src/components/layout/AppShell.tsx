@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router';
 import { APP_NAME, getPageTitle } from '../../constants/navigation';
 import { MobileNav } from './MobileNav';
 import { Sidebar } from './Sidebar';
+import { StorageNotice } from './StorageNotice';
 import { TopBar } from './TopBar';
 
 export function AppShell() {
@@ -41,6 +42,7 @@ export function AppShell() {
           className="flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8"
         >
           <div className="mx-auto max-w-7xl">
+            <StorageNotice />
             <Outlet />
           </div>
         </main>
