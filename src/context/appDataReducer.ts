@@ -2,7 +2,11 @@ import type { AppData } from '../models/appData';
 import type { Budget } from '../models/budget';
 import { budgetKey } from '../models/budget';
 import { createEmptyAppData } from '../models/appData';
+import type { RecurringDraft, RecurringSchedule } from '../models/recurring';
 import type { Transaction, TransactionDraft } from '../models/transaction';
+import { catchUpAll } from '../features/recurring/catchUp';
+import { firstOccurrenceOnOrAfter } from '../features/recurring/schedule';
+import type { IsoDate } from '../utils/dates';
 
 /**
  * Every change to app data is one of these actions. The reducer is pure:
@@ -17,6 +21,26 @@ export type AppDataAction =
   /** Only the limit can change; what a budget is for is fixed once created. */
   | { type: 'budgetUpdated'; id: string; limitPence: number; updatedAt: string }
   | { type: 'budgetDeleted'; id: string }
+  /**
+   * Recurring schedules. Every action that could make a payment due also
+   * catches up, so `today` (a calendar date) and `now` (for timestamps)
+   * are passed in to keep the reducer pure.
+   */
+  | { type: 'recurringScheduleAdded'; schedule: RecurringSchedule; today: IsoDate; now: string }
+  /** Changes to timing apply from today; past payments are never re-added. */
+  | {
+      type: 'recurringScheduleUpdated';
+      id: string;
+      changes: RecurringDraft;
+      today: IsoDate;
+      now: string;
+    }
+  /** Resuming skips payments missed while paused. */
+  | { type: 'recurringSchedulePaused'; id: string; paused: boolean; today: IsoDate; now: string }
+  /** Transactions already added stay; they are part of your history. */
+  | { type: 'recurringScheduleDeleted'; id: string }
+  /** Adds every payment that has fallen due. Runs when the app opens. */
+  | { type: 'recurringCaughtUp'; today: IsoDate; now: string }
   /**
    * Replaces any existing demo records with these. Real records are never
    * touched, and a demo budget is skipped if a real budget already covers
@@ -71,6 +95,49 @@ export function appDataReducer(state: AppData, action: AppDataAction): AppData {
       return budgets.length === state.budgets.length ? state : { ...state, budgets };
     }
 
+    case 'recurringScheduleAdded':
+      return catchUp(
+        { ...state, recurringSchedules: [...state.recurringSchedules, action.schedule] },
+        action,
+      );
+
+    case 'recurringScheduleUpdated': {
+      const current = state.recurringSchedules.find((s) => s.id === action.id);
+      if (!current) return state;
+      const updated = applyScheduleChanges(current, action.changes, action.today, action.now);
+      return catchUp(replaceSchedule(state, updated), action);
+    }
+
+    case 'recurringSchedulePaused': {
+      const current = state.recurringSchedules.find((s) => s.id === action.id);
+      if (!current || current.paused === action.paused) return state;
+      const updated: RecurringSchedule = {
+        ...current,
+        paused: action.paused,
+        updatedAt: action.now,
+        // On resume, carry on from today rather than adding missed payments.
+        nextDueDate: action.paused
+          ? current.nextDueDate
+          : firstOccurrenceOnOrAfter(
+              current.startDate,
+              current.frequency,
+              action.today,
+              current.endDate,
+            ),
+      };
+      return catchUp(replaceSchedule(state, updated), action);
+    }
+
+    case 'recurringScheduleDeleted': {
+      const recurringSchedules = state.recurringSchedules.filter((s) => s.id !== action.id);
+      return recurringSchedules.length === state.recurringSchedules.length
+        ? state
+        : { ...state, recurringSchedules };
+    }
+
+    case 'recurringCaughtUp':
+      return catchUp(state, action);
+
     case 'demoDataLoaded': {
       const realBudgets = state.budgets.filter((b) => !b.isDemo);
       const taken = new Set(realBudgets.map(budgetKey));
@@ -84,10 +151,12 @@ export function appDataReducer(state: AppData, action: AppDataAction): AppData {
     case 'demoDataCleared': {
       const transactions = state.transactions.filter((t) => !t.isDemo);
       const budgets = state.budgets.filter((b) => !b.isDemo);
+      const recurringSchedules = state.recurringSchedules.filter((s) => !s.isDemo);
       const unchanged =
         transactions.length === state.transactions.length &&
-        budgets.length === state.budgets.length;
-      return unchanged ? state : { ...state, transactions, budgets };
+        budgets.length === state.budgets.length &&
+        recurringSchedules.length === state.recurringSchedules.length;
+      return unchanged ? state : { ...state, transactions, budgets, recurringSchedules };
     }
 
     case 'dataReset':
@@ -99,5 +168,53 @@ export function appDataReducer(state: AppData, action: AppDataAction): AppData {
 function applyChanges(current: Transaction, changes: TransactionDraft): Transaction {
   const next: Transaction = { ...current, ...changes };
   if (changes.notes === undefined || changes.notes === '') delete next.notes;
+  return next;
+}
+
+/** Adds due payments for every schedule; the same state if none were due. */
+function catchUp(state: AppData, { today, now }: { today: IsoDate; now: string }): AppData {
+  const result = catchUpAll(state.recurringSchedules, state.transactions, { today, now });
+  if (result.schedules === state.recurringSchedules) return state;
+  return {
+    ...state,
+    recurringSchedules: [...result.schedules],
+    transactions: [...result.transactions],
+  };
+}
+
+function replaceSchedule(state: AppData, updated: RecurringSchedule): AppData {
+  return {
+    ...state,
+    recurringSchedules: state.recurringSchedules.map((s) => (s.id === updated.id ? updated : s)),
+  };
+}
+
+/**
+ * Applies form changes. If the timing changed (start, frequency or end),
+ * the next payment is recalculated from today, so nothing in the past is
+ * added again. Otherwise the schedule carries on exactly where it was.
+ */
+function applyScheduleChanges(
+  current: RecurringSchedule,
+  changes: RecurringDraft,
+  today: IsoDate,
+  now: string,
+): RecurringSchedule {
+  const next: RecurringSchedule = { ...current, ...changes, updatedAt: now };
+  if (!changes.notes) delete next.notes;
+  if (changes.endDate === undefined) delete next.endDate;
+
+  const timingChanged =
+    current.startDate !== next.startDate ||
+    current.frequency !== next.frequency ||
+    current.endDate !== next.endDate;
+  if (timingChanged) {
+    next.nextDueDate = firstOccurrenceOnOrAfter(
+      next.startDate,
+      next.frequency,
+      today,
+      next.endDate,
+    );
+  }
   return next;
 }

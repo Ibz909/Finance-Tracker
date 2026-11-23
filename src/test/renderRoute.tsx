@@ -16,7 +16,7 @@ export const TEST_NOW = new Date(2026, 10, 15, 12, 0);
 interface Options {
   /** Defaults to an empty in-memory repository, isolated per test. */
   repository?: DataRepository;
-  /** "Today" for the reporting month. Defaults to TEST_NOW. */
+  /** "Today" for the reporting month and recurring payments. Defaults to TEST_NOW. */
   now?: Date;
 }
 
@@ -36,7 +36,7 @@ export function renderRoute(
     repository,
     ...render(
       <ThemeProvider>
-        <AppDataProvider repository={repository}>
+        <AppDataProvider repository={repository} clock={() => now}>
           <ToastProvider>
             <TransactionDialogProvider>
               <ReportingMonthProvider now={now}>

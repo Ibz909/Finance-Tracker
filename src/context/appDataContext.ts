@@ -24,3 +24,16 @@ export interface StorageStatus {
 }
 
 export const StorageStatusContext = createContext<StorageStatus | null>(null);
+
+/**
+ * The app's clock. Injectable so tests control "today"; anything that needs
+ * the current date for data (such as recurring payments) reads it here.
+ */
+export const ClockContext = createContext<(() => Date) | null>(null);
+
+/** How many recurring payments were added when the app opened. */
+export interface RecurringCatchUp {
+  added: number;
+  dismiss: () => void;
+}
+export const RecurringCatchUpContext = createContext<RecurringCatchUp | null>(null);

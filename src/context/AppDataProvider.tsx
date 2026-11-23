@@ -1,22 +1,28 @@
 import type { ReactNode } from 'react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DataRepository } from '../services/storage/DataRepository';
 import { createLocalStorageRepository } from '../services/storage/localStorageRepository';
-import type { StorageStatus } from './appDataContext';
+import { nowIsoDateTime, todayIsoDate } from '../utils/dates';
+import type { RecurringCatchUp, StorageStatus } from './appDataContext';
 import {
   AppDataDispatchContext,
   AppDataStateContext,
+  ClockContext,
+  RecurringCatchUpContext,
   StorageStatusContext,
 } from './appDataContext';
 import type { AppDataAction } from './appDataReducer';
 import { appDataReducer } from './appDataReducer';
 
 const defaultRepository = createLocalStorageRepository();
+const systemClock = () => new Date();
 
 interface AppDataProviderProps {
   children: ReactNode;
   /** Injectable so tests (and a future API backend) can supply their own. */
   repository?: DataRepository;
+  /** The current time. Injectable so tests never depend on the real date. */
+  clock?: () => Date;
 }
 
 /**
@@ -31,9 +37,22 @@ interface AppDataProviderProps {
 export function AppDataProvider({
   children,
   repository = defaultRepository,
+  clock = systemClock,
 }: AppDataProviderProps) {
-  const [initialLoad] = useState(() => repository.load());
-  const [data, setData] = useState(initialLoad.data);
+  // Loading also adds any recurring payments that fell due while the app
+  // was closed. Both steps are pure, so this is safe in an initialiser.
+  const [initial] = useState(() => {
+    const load = repository.load();
+    const time = clock();
+    const data = appDataReducer(load.data, {
+      type: 'recurringCaughtUp',
+      today: todayIsoDate(time),
+      now: nowIsoDateTime(time),
+    });
+    return { load, data, added: data.transactions.length - load.data.transactions.length };
+  });
+  const initialLoad = initial.load;
+  const [data, setData] = useState(initial.data);
   // Latest data, so several dispatches in one event build on each other.
   const dataRef = useRef(data);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -51,6 +70,24 @@ export function AppDataProvider({
     [repository],
   );
 
+  // Persist payments added on load. This is what effects are for: syncing
+  // with an outside system after render. It sets no state; if the save
+  // fails, the next change retries it and reports the problem.
+  useEffect(() => {
+    if (initial.data !== initial.load.data) repository.save(initial.data);
+  }, [initial, repository]);
+
+  const [catchUpDismissed, setCatchUpDismissed] = useState(false);
+  const recurringCatchUp = useMemo<RecurringCatchUp>(
+    () => ({
+      added: catchUpDismissed ? 0 : initial.added,
+      dismiss: () => {
+        setCatchUpDismissed(true);
+      },
+    }),
+    [catchUpDismissed, initial.added],
+  );
+
   const dismissLoadProblem = useCallback(() => {
     setLoadProblemDismissed(true);
   }, []);
@@ -64,10 +101,14 @@ export function AppDataProvider({
   }, [initialLoad, loadProblemDismissed, saveError, dismissLoadProblem]);
 
   return (
-    <StorageStatusContext value={storageStatus}>
-      <AppDataDispatchContext value={dispatch}>
-        <AppDataStateContext value={data}>{children}</AppDataStateContext>
-      </AppDataDispatchContext>
-    </StorageStatusContext>
+    <ClockContext value={clock}>
+      <StorageStatusContext value={storageStatus}>
+        <RecurringCatchUpContext value={recurringCatchUp}>
+          <AppDataDispatchContext value={dispatch}>
+            <AppDataStateContext value={data}>{children}</AppDataStateContext>
+          </AppDataDispatchContext>
+        </RecurringCatchUpContext>
+      </StorageStatusContext>
+    </ClockContext>
   );
 }
