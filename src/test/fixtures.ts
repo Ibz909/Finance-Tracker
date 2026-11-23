@@ -1,3 +1,4 @@
+import type { Budget } from '../models/budget';
 import type { Transaction } from '../models/transaction';
 
 let counter = 0;
@@ -20,4 +21,22 @@ export function makeTransaction(overrides: Partial<Transaction> = {}): Transacti
     isDemo: false,
     ...overrides,
   };
+}
+
+/** A valid budget; defaults to a £300 groceries limit. */
+export function makeBudget(overrides: Partial<Budget> = {}): Budget {
+  counter += 1;
+  const budget: Budget = {
+    id: `budget-${String(counter)}`,
+    scope: 'category',
+    categoryId: 'food_groceries',
+    limitPence: 30000,
+    createdAt: '2026-03-01T12:00:00.000Z',
+    updatedAt: '2026-03-01T12:00:00.000Z',
+    isDemo: false,
+    ...overrides,
+  };
+  // An overall budget must not carry a category.
+  if (budget.scope === 'overall' && !('categoryId' in overrides)) delete budget.categoryId;
+  return budget;
 }

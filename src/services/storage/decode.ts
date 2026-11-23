@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import type { AppData } from '../../models/appData';
+import type { Budget } from '../../models/budget';
+import { budgetKey, budgetSchema } from '../../models/budget';
 import { createEmptyAppData } from '../../models/appData';
 import { settingsSchema } from '../../models/settings';
 import type { Transaction } from '../../models/transaction';
@@ -17,6 +19,7 @@ export type DecodeResult =
 
 const dataShapeSchema = z.object({
   transactions: z.array(z.unknown()),
+  budgets: z.array(z.unknown()),
   settings: z.unknown(),
 });
 
@@ -24,7 +27,8 @@ const dataShapeSchema = z.object({
  * Turns whatever was parsed from storage into trustworthy AppData.
  *
  * Validation is per record: one corrupted transaction is dropped rather
- * than discarding hundreds of good ones. Duplicate IDs keep the first copy.
+ * than discarding hundreds of good ones. Duplicate IDs keep the first copy,
+ * and only the first budget per category (or overall) is kept.
  */
 export function decodeAppData(raw: unknown): DecodeResult {
   const envelope = envelopeSchema.safeParse(raw);
@@ -41,29 +45,53 @@ export function decodeAppData(raw: unknown): DecodeResult {
   }
 
   const transactions: Transaction[] = [];
-  const seenIds = new Set<string>();
-  let skippedRecords = 0;
+  const seenTransactionIds = new Set<string>();
+  let skippedTransactions = 0;
 
   for (const candidate of shape.data.transactions) {
     const parsed = transactionSchema.safeParse(candidate);
-    if (parsed.success && !seenIds.has(parsed.data.id)) {
-      seenIds.add(parsed.data.id);
+    if (parsed.success && !seenTransactionIds.has(parsed.data.id)) {
+      seenTransactionIds.add(parsed.data.id);
       transactions.push(parsed.data);
     } else {
-      skippedRecords++;
+      skippedTransactions++;
+    }
+  }
+
+  const budgets: Budget[] = [];
+  const seenBudgetIds = new Set<string>();
+  const seenBudgetKeys = new Set<string>();
+  let skippedBudgets = 0;
+
+  for (const candidate of shape.data.budgets) {
+    const parsed = budgetSchema.safeParse(candidate);
+    const key = parsed.success ? budgetKey(parsed.data) : '';
+    if (parsed.success && !seenBudgetIds.has(parsed.data.id) && !seenBudgetKeys.has(key)) {
+      seenBudgetIds.add(parsed.data.id);
+      seenBudgetKeys.add(key);
+      budgets.push(parsed.data);
+    } else {
+      skippedBudgets++;
     }
   }
 
   const settings = settingsSchema.safeParse(shape.data.settings);
   const data: AppData = {
     transactions,
+    budgets,
     settings: settings.success ? settings.data : createEmptyAppData().settings,
   };
 
+  const skippedRecords = skippedTransactions + skippedBudgets;
   const problems: string[] = [];
-  if (skippedRecords > 0) {
+  if (skippedTransactions > 0) {
     problems.push(
-      `${String(skippedRecords)} saved transaction${skippedRecords === 1 ? ' was' : 's were'} invalid and skipped.`,
+      `${String(skippedTransactions)} saved transaction${skippedTransactions === 1 ? ' was' : 's were'} invalid and skipped.`,
+    );
+  }
+  if (skippedBudgets > 0) {
+    problems.push(
+      `${String(skippedBudgets)} saved budget${skippedBudgets === 1 ? ' was' : 's were'} invalid or duplicated and skipped.`,
     );
   }
   if (!settings.success) problems.push('Settings were invalid and have been reset.');

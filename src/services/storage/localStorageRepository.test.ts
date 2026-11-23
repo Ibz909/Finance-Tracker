@@ -72,7 +72,11 @@ describe('localStorageRepository', () => {
     const good = makeTransaction();
     const raw = JSON.stringify({
       schemaVersion: CURRENT_SCHEMA_VERSION,
-      data: { transactions: [good, { broken: true }], settings: { currency: 'GBP' } },
+      data: {
+        transactions: [good, { broken: true }],
+        budgets: [],
+        settings: { currency: 'GBP' },
+      },
     });
     localStorage.setItem(KEY, raw);
 
@@ -125,5 +129,21 @@ describe('localStorageRepository', () => {
 
     expect(result).toMatchObject({ ok: false });
     if (!result.ok) expect(result.error).toMatch(/full/);
+  });
+
+  it('upgrades and keeps data saved before budgets existed (version 1)', () => {
+    const transaction = makeTransaction();
+    localStorage.setItem(
+      KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        data: { transactions: [transaction], settings: { currency: 'GBP' } },
+      }),
+    );
+
+    expect(repository().load()).toEqual({
+      status: 'ok',
+      data: { ...createEmptyAppData(), transactions: [transaction] },
+    });
   });
 });

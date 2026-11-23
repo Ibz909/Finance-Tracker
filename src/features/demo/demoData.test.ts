@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { budgetKey, budgetSchema } from '../../models/budget';
 import { transactionSchema } from '../../models/transaction';
-import { DEMO_ID_PREFIX, DEMO_MONTHS, generateDemoTransactions } from './demoData';
+import { getMonthBudgets } from '../budgets/budgetProgress';
+import {
+  DEMO_ID_PREFIX,
+  DEMO_MONTHS,
+  generateDemoBudgets,
+  generateDemoTransactions,
+} from './demoData';
 
 const NOW = new Date(2026, 10, 15, 12, 0); // 15 November 2026, local time
 const demo = generateDemoTransactions(NOW);
@@ -75,5 +82,26 @@ describe('generateDemoTransactions', () => {
       '2028-02',
     ]);
     expect(february.every((t) => transactionSchema.safeParse(t).success)).toBe(true);
+  });
+});
+
+describe('generateDemoBudgets', () => {
+  const budgets = generateDemoBudgets(NOW);
+
+  it('produces valid, flagged, non-overlapping budgets', () => {
+    for (const budget of budgets) {
+      expect(budgetSchema.safeParse(budget).success).toBe(true);
+      expect(budget.isDemo).toBe(true);
+      expect(budget.id.startsWith(DEMO_ID_PREFIX)).toBe(true);
+    }
+    const keys = budgets.map(budgetKey);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys).toContain('overall');
+  });
+
+  it('shows a mix of statuses against a full month of demo spending', () => {
+    const { categories } = getMonthBudgets(budgets, demo, '2026-10');
+    const statuses = new Set(categories.map((p) => p.status));
+    expect(statuses).toEqual(new Set(['normal', 'warning', 'exceeded']));
   });
 });

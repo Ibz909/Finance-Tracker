@@ -1,4 +1,6 @@
 import type { AppData } from '../models/appData';
+import type { Budget } from '../models/budget';
+import { budgetKey } from '../models/budget';
 import { createEmptyAppData } from '../models/appData';
 import type { Transaction, TransactionDraft } from '../models/transaction';
 
@@ -11,8 +13,16 @@ export type AppDataAction =
   | { type: 'transactionAdded'; transaction: Transaction }
   | { type: 'transactionUpdated'; id: string; changes: TransactionDraft; updatedAt: string }
   | { type: 'transactionDeleted'; id: string }
-  /** Replaces any existing demo records with these; real records are untouched. */
-  | { type: 'demoDataLoaded'; transactions: Transaction[] }
+  | { type: 'budgetAdded'; budget: Budget }
+  /** Only the limit can change; what a budget is for is fixed once created. */
+  | { type: 'budgetUpdated'; id: string; limitPence: number; updatedAt: string }
+  | { type: 'budgetDeleted'; id: string }
+  /**
+   * Replaces any existing demo records with these. Real records are never
+   * touched, and a demo budget is skipped if a real budget already covers
+   * the same category (or overall), so the user's own limit always wins.
+   */
+  | { type: 'demoDataLoaded'; transactions: Transaction[]; budgets: Budget[] }
   /** Removes every record flagged isDemo, and nothing else. */
   | { type: 'demoDataCleared' }
   | { type: 'dataReset' };
@@ -41,15 +51,43 @@ export function appDataReducer(state: AppData, action: AppDataAction): AppData {
       return transactions.length === state.transactions.length ? state : { ...state, transactions };
     }
 
-    case 'demoDataLoaded':
+    case 'budgetAdded':
+      return { ...state, budgets: [...state.budgets, action.budget] };
+
+    case 'budgetUpdated': {
+      if (!state.budgets.some((b) => b.id === action.id)) return state;
+      return {
+        ...state,
+        budgets: state.budgets.map((b) =>
+          b.id === action.id
+            ? { ...b, limitPence: action.limitPence, updatedAt: action.updatedAt }
+            : b,
+        ),
+      };
+    }
+
+    case 'budgetDeleted': {
+      const budgets = state.budgets.filter((b) => b.id !== action.id);
+      return budgets.length === state.budgets.length ? state : { ...state, budgets };
+    }
+
+    case 'demoDataLoaded': {
+      const realBudgets = state.budgets.filter((b) => !b.isDemo);
+      const taken = new Set(realBudgets.map(budgetKey));
       return {
         ...state,
         transactions: [...state.transactions.filter((t) => !t.isDemo), ...action.transactions],
+        budgets: [...realBudgets, ...action.budgets.filter((b) => !taken.has(budgetKey(b)))],
       };
+    }
 
     case 'demoDataCleared': {
       const transactions = state.transactions.filter((t) => !t.isDemo);
-      return transactions.length === state.transactions.length ? state : { ...state, transactions };
+      const budgets = state.budgets.filter((b) => !b.isDemo);
+      const unchanged =
+        transactions.length === state.transactions.length &&
+        budgets.length === state.budgets.length;
+      return unchanged ? state : { ...state, transactions, budgets };
     }
 
     case 'dataReset':

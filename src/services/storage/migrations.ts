@@ -4,12 +4,19 @@ import { CURRENT_SCHEMA_VERSION } from './envelope';
 export type Migration = (data: unknown) => unknown;
 
 /**
- * Migration `n` upgrades version n data to version n + 1. Version 1 is the
- * first release, so there are none yet. When a feature such as budgets is
- * added, it registers `1: (data) => ({ ...data, budgets: [] })` and bumps
- * CURRENT_SCHEMA_VERSION to 2.
+ * Migration `n` upgrades version n data to version n + 1. Each one must be
+ * pure and must never drop data it does not understand.
+ *
+ * History:
+ *   1 → 2  Budgets added: start with an empty list.
  */
-export const MIGRATIONS: Readonly<Record<number, Migration>> = {};
+export const MIGRATIONS: Readonly<Record<number, Migration>> = {
+  1: (data) => (isRecord(data) ? { ...data, budgets: [] } : data),
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 export type MigrationResult = { ok: true; data: unknown } | { ok: false; problem: string };
 
