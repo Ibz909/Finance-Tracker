@@ -16,7 +16,8 @@ interface DialogProps {
  *
  * showModal() traps focus, makes the page behind inert, closes on Escape
  * and restores focus to the opener when closed. Content only mounts while
- * open, so forms inside start fresh every time. Put `data-autofocus` on the
+ * open, so forms inside start fresh every time. If the opener has been
+ * removed, focus falls back to #main-content. Put `data-autofocus` on the
  * element that should receive focus first; otherwise the browser picks the
  * first focusable element.
  */
@@ -40,7 +41,15 @@ export function Dialog({ open, onClose, title, description, children }: DialogPr
       ref={dialogRef}
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
-      onClose={onClose}
+      onClose={() => {
+        // The browser returns focus to whatever opened the dialog. If that
+        // element is gone (e.g. the row was just deleted), focus would be
+        // lost, so fall back to the main content area.
+        if (document.activeElement === document.body) {
+          document.getElementById('main-content')?.focus();
+        }
+        onClose();
+      }}
       onClick={(event) => {
         // A click whose target is the <dialog> itself landed on the backdrop.
         if (event.target === event.currentTarget) onClose();
