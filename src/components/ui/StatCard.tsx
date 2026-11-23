@@ -39,7 +39,7 @@ export function StatCard({
   return (
     <section
       aria-labelledby={labelId}
-      className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
+      className="min-w-0 rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-5"
     >
       <div className="flex items-center justify-between gap-3">
         <h3 id={labelId} className="text-sm font-medium text-muted-foreground">
@@ -47,12 +47,14 @@ export function StatCard({
         </h3>
         <span
           aria-hidden="true"
-          className={`flex size-9 items-center justify-center rounded-full ${ICON_TONE[iconTone]}`}
+          className={`hidden size-9 shrink-0 items-center justify-center rounded-full sm:flex ${ICON_TONE[iconTone]}`}
         >
           <Icon className="size-5" />
         </span>
       </div>
-      <p className={`mt-3 text-2xl font-semibold tracking-tight tabular-nums ${VALUE_TONE[tone]}`}>
+      <p
+        className={`mt-2 text-xl font-semibold tracking-tight break-words tabular-nums sm:mt-3 sm:text-2xl ${VALUE_TONE[tone]}`}
+      >
         {value}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">{footnote}</p>
