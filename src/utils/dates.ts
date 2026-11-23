@@ -86,3 +86,8 @@ export function formatMonthLabel(month: MonthKey): string {
 export function nowIsoDateTime(now: Date = new Date()): string {
   return now.toISOString();
 }
+
+/** "2026-11" → "Nov" (or "Nov 2026" with the year), for chart axes. */
+export function formatShortMonth(month: MonthKey, withYear = false): string {
+  return format(parseIsoDate(`${month}-01`), withYear ? 'MMM yyyy' : 'MMM');
+}
