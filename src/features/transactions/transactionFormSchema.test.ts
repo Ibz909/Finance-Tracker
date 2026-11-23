@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeTransaction } from '../../test/fixtures';
-import type { TransactionFormValues } from './transactionForm';
-import { emptyFormValues, toFormValues, transactionFormSchema } from './transactionForm';
+import type { TransactionFormValues } from './transactionFormSchema';
+import { emptyFormValues, toFormValues, transactionFormSchema } from './transactionFormSchema';
 
 const valid: TransactionFormValues = {
   type: 'expense',
@@ -12,10 +12,16 @@ const valid: TransactionFormValues = {
   notes: '',
 };
 
+/** Every message per field, so a test fails if a field gets two competing errors. */
 function errorsFor(values: TransactionFormValues) {
   const result = transactionFormSchema.safeParse(values);
-  if (result.success) return {};
-  return Object.fromEntries(result.error.issues.map((i) => [String(i.path[0]), i.message]));
+  const errors: Record<string, string[]> = {};
+  if (result.success) return errors;
+  for (const issue of result.error.issues) {
+    const field = String(issue.path[0]);
+    (errors[field] ??= []).push(issue.message);
+  }
+  return errors;
 }
 
 describe('transactionFormSchema', () => {
@@ -38,22 +44,22 @@ describe('transactionFormSchema', () => {
     expect(
       errorsFor({ ...valid, amount: '12.345', categoryId: '', description: ' ', date: '' }),
     ).toEqual({
-      amount: 'Use no more than two decimal places',
-      categoryId: 'Choose a category',
-      description: 'Enter a description',
-      date: 'Enter a valid date',
+      amount: ['Use no more than two decimal places'],
+      categoryId: ['Choose a category'],
+      description: ['Enter a description'],
+      date: ['Enter a valid date'],
     });
   });
 
   it('rejects a zero amount', () => {
     expect(errorsFor({ ...valid, amount: '0' })).toEqual({
-      amount: 'Enter an amount greater than zero',
+      amount: ['Enter an amount greater than zero'],
     });
   });
 
   it('rejects a category from the other type', () => {
     expect(errorsFor({ ...valid, categoryId: 'salary' })).toEqual({
-      categoryId: 'Choose an expense category',
+      categoryId: ['Choose an expense category'],
     });
   });
 });

@@ -15,7 +15,7 @@ export const NOTES_MAX_LENGTH = 500;
 const editableFields = z.object({
   type: transactionTypeSchema,
   amountPence: penceSchema,
-  categoryId: idSchema,
+  categoryId: z.string().min(1, 'Choose a category').max(100),
   description: z
     .string()
     .trim()
@@ -34,6 +34,7 @@ function checkCategory(
   value: { type: 'income' | 'expense'; categoryId: string },
   ctx: z.RefinementCtx,
 ): void {
+  if (value.categoryId === '') return; // already reported by the field's own rule
   const category = getCategory(value.categoryId);
   if (!category) {
     ctx.addIssue({ code: 'custom', path: ['categoryId'], message: 'Choose a category' });

@@ -4,6 +4,8 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { routes } from '../app/router';
 import { AppDataProvider } from '../context/AppDataProvider';
 import { ThemeProvider } from '../context/ThemeProvider';
+import { ToastProvider } from '../context/ToastProvider';
+import { TransactionDialogProvider } from '../context/TransactionDialogProvider';
 import type { DataRepository } from '../services/storage/DataRepository';
 import { createMemoryRepository } from '../services/storage/memoryRepository';
 
@@ -26,7 +28,11 @@ export function renderRoute(path = '/', { repository = createMemoryRepository() 
     ...render(
       <ThemeProvider>
         <AppDataProvider repository={repository}>
-          <RouterProvider router={router} />
+          <ToastProvider>
+            <TransactionDialogProvider>
+              <RouterProvider router={router} />
+            </TransactionDialogProvider>
+          </ToastProvider>
         </AppDataProvider>
       </ThemeProvider>,
     ),

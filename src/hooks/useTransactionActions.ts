@@ -15,7 +15,7 @@ export function useTransactionActions() {
 
   return useMemo(
     () => ({
-      addTransaction(input: unknown) {
+      addTransaction: (input: unknown) => {
         const result = buildAddTransaction(input, {
           id: crypto.randomUUID(),
           now: nowIsoDateTime(),
@@ -23,12 +23,12 @@ export function useTransactionActions() {
         if (result.ok) dispatch(result.value);
         return result;
       },
-      updateTransaction(id: string, input: unknown) {
+      updateTransaction: (id: string, input: unknown) => {
         const result = buildUpdateTransaction(id, input, { now: nowIsoDateTime() });
         if (result.ok) dispatch(result.value);
         return result;
       },
-      deleteTransaction(id: string) {
+      deleteTransaction: (id: string) => {
         dispatch({ type: 'transactionDeleted', id });
       },
     }),

@@ -1,5 +1,6 @@
 import { TriangleAlert, X } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useId } from 'react';
 import { useStorageStatus } from '../../hooks/useAppData';
 import { Button } from '../ui/Button';
 
@@ -48,14 +49,18 @@ interface BannerProps {
 }
 
 function Banner({ role, title, children, onDismiss }: BannerProps) {
+  const titleId = useId();
   return (
     <div
       role={role}
+      aria-labelledby={titleId}
       className="mb-6 flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/10 p-4"
     >
       <TriangleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-warning" />
       <div className="flex-1 text-sm">
-        <p className="font-medium">{title}</p>
+        <p id={titleId} className="font-medium">
+          {title}
+        </p>
         <p className="mt-1 text-muted-foreground">{children}</p>
       </div>
       {onDismiss && (

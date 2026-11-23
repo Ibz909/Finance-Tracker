@@ -99,6 +99,6 @@ describe('Appearance settings', () => {
     await user.click(screen.getByRole('radio', { name: /dark/i }));
 
     expect(html).toHaveClass('dark');
-    expect(screen.getByRole('status')).toHaveTextContent(/blocked saving this preference/i);
+    expect(screen.getByText(/blocked saving this preference/i)).toHaveAttribute('role', 'status');
   });
 });
