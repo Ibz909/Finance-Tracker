@@ -50,4 +50,12 @@ if (!window.matchMedia) {
     dispatchEvent: () => false,
   });
 }
+// Recharts' ResponsiveContainer watches its size; jsdom has no layout, so a no-op is enough.
+if (!window.ResizeObserver) {
+  window.ResizeObserver = class {
+    observe = () => undefined;
+    unobserve = () => undefined;
+    disconnect = () => undefined;
+  };
+}
 /* eslint-enable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/no-deprecated */

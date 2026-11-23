@@ -94,6 +94,34 @@ export function categoryBreakdown(
   return { totalPence, categories };
 }
 
+/** The donut shows at most this many slices; the rest are grouped. */
+export const MAX_DONUT_SLICES = 6;
+export const GROUPED_CATEGORY_ID = 'everything-else';
+
+/**
+ * Keeps the largest categories and merges the rest into one
+ * "Everything else" slice, so a donut never becomes a fan of slivers.
+ * Totals are unchanged; the full list stays available elsewhere.
+ */
+export function groupSmallCategories(
+  categories: readonly CategoryTotal[],
+  maxSlices = MAX_DONUT_SLICES,
+): CategoryTotal[] {
+  if (categories.length <= maxSlices) return [...categories];
+  const kept = categories.slice(0, maxSlices - 1);
+  const rest = categories.slice(maxSlices - 1);
+  return [
+    ...kept,
+    {
+      categoryId: GROUPED_CATEGORY_ID,
+      label: `Everything else (${String(rest.length)} categories)`,
+      color: 'chart-12',
+      totalPence: rest.reduce((sum, c) => sum + c.totalPence, 0),
+      sharePercent: Math.round(rest.reduce((sum, c) => sum + c.sharePercent, 0) * 10) / 10,
+    },
+  ];
+}
+
 /** A trend needs at least two months with spending; one point is not a trend. */
 export function hasEnoughTrendData(totals: readonly MonthTotals[]): boolean {
   return totals.filter((t) => t.expensesPence > 0).length >= 2;

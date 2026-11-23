@@ -38,3 +38,18 @@ export const TOOLTIP_STYLE = {
   labelStyle: { color: 'var(--foreground)', fontWeight: 600 },
   itemStyle: { color: 'var(--foreground)' },
 } as const;
+
+/**
+ * Round axis ticks (£0, £500, £1k, £1.5k…) for values in pence, so the
+ * scale reads naturally instead of stepping in odd amounts like £850.
+ */
+export function niceTicks(maxPence: number, targetCount = 4): number[] {
+  if (maxPence <= 0) return [0];
+  const rough = maxPence / targetCount;
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const step =
+    [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((candidate) => candidate >= rough) ??
+    10 * magnitude;
+  const top = Math.ceil(maxPence / step) * step;
+  return Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step);
+}

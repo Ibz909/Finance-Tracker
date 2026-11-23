@@ -32,7 +32,11 @@ export const routes: RouteObject[] = [
         element: <BudgetsPage />,
         handle: { usesReportingMonth: true } satisfies RouteHandle,
       },
-      { path: 'analytics', element: <AnalyticsPage /> },
+      {
+        path: 'analytics',
+        element: <AnalyticsPage />,
+        handle: { usesReportingMonth: true } satisfies RouteHandle,
+      },
       { path: 'savings', element: <SavingsGoalsPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },

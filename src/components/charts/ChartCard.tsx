@@ -16,7 +16,8 @@ interface ChartCardProps {
 }
 
 /**
- * Frame for every chart: title, text summary, the chart (lazy-loaded, with
+ * Frame for every chart (min-w-0 lets it shrink inside CSS grids, which
+ * charts otherwise push wider than the screen): title, text summary, the chart (lazy-loaded, with
  * a placeholder while it downloads), and an optional data table.
  */
 export function ChartCard({
@@ -34,7 +35,7 @@ export function ChartCard({
   return (
     <section
       aria-labelledby={titleId}
-      className={`rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6 ${className}`}
+      className={`min-w-0 rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6 ${className}`}
     >
       <Heading id={titleId} className="text-base font-semibold">
         {title}

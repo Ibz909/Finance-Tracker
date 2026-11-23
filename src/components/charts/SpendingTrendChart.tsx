@@ -10,10 +10,17 @@ import {
 import type { MonthTotals } from '../../features/analytics/analytics';
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 import { formatShortMonth } from '../../utils/dates';
-import { CHART_COLORS, formatAxisPence, formatTooltipPence, TOOLTIP_STYLE } from './chartFormat';
+import {
+  CHART_COLORS,
+  formatAxisPence,
+  formatTooltipPence,
+  niceTicks,
+  TOOLTIP_STYLE,
+} from './chartFormat';
 
 export function SpendingTrendChart({ totals }: { totals: readonly MonthTotals[] }) {
   const reduceMotion = usePrefersReducedMotion();
+  const ticks = niceTicks(Math.max(...totals.map((t) => t.expensesPence), 0));
   const data = totals.map((t) => ({ label: formatShortMonth(t.month), Spending: t.expensesPence }));
 
   return (
@@ -30,6 +37,8 @@ export function SpendingTrendChart({ totals }: { totals: readonly MonthTotals[] 
           width={52}
           tickLine={false}
           axisLine={false}
+          ticks={ticks}
+          domain={[0, ticks[ticks.length - 1] ?? 0]}
           tickFormatter={formatAxisPence}
           tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
         />

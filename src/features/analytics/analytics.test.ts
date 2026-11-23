@@ -4,6 +4,7 @@ import { makeTransaction } from '../../test/fixtures';
 import {
   categoryBreakdown,
   categorySummary,
+  groupSmallCategories,
   hasEnoughTrendData,
   incomeExpenseSummary,
   monthlyTotals,
@@ -159,5 +160,32 @@ describe('summaries', () => {
     expect(categorySummary(categoryBreakdown(transactions, months), months)).toBe(
       '£4,000.00 spent across 2 categories in Oct – Nov 2026. The largest was Travel at £2,200.00 (55%).',
     );
+  });
+});
+
+describe('groupSmallCategories', () => {
+  const categories = Array.from({ length: 8 }, (_, i) => ({
+    categoryId: `c${String(i)}`,
+    label: `Category ${String(i)}`,
+    color: 'chart-1' as const,
+    totalPence: 800 - i * 100,
+    sharePercent: 10,
+  }));
+
+  it('keeps short lists as they are', () => {
+    expect(groupSmallCategories(categories.slice(0, 3), 6)).toHaveLength(3);
+  });
+
+  it('merges the smallest into one slice without changing the total', () => {
+    const grouped = groupSmallCategories(categories, 6);
+
+    expect(grouped).toHaveLength(6);
+    expect(grouped[5]).toMatchObject({
+      label: 'Everything else (3 categories)',
+      totalPence: 300 + 200 + 100,
+      sharePercent: 30,
+    });
+    const sum = (list: { totalPence: number }[]) => list.reduce((s, c) => s + c.totalPence, 0);
+    expect(sum(grouped)).toBe(sum(categories));
   });
 });
