@@ -34,8 +34,8 @@ describe('generateDemoTransactions', () => {
 
   it('only includes this month’s items that have already happened', () => {
     const november = demo.filter((t) => t.date.startsWith('2026-11'));
-    expect(november.some((t) => t.description === 'Rent')).toBe(true); // 1st
-    expect(november.some((t) => t.description === 'Monthly salary')).toBe(false); // 25th
+    expect(november.some((t) => t.description === 'Monthly salary')).toBe(true); // 1st
+    expect(november.some((t) => t.description === 'Friday takeaway')).toBe(false); // 27th
   });
 
   it('includes realistic income and the expense categories from the brief', () => {
@@ -51,9 +51,9 @@ describe('generateDemoTransactions', () => {
     ]) {
       expect(categories).toContain(id);
     }
-    // Salary lands on the 25th, so it appears in every completed month.
+    // Salary lands on the 1st, so every month (even this one) has income.
     const salaries = demo.filter((t) => t.categoryId === 'salary');
-    expect(salaries).toHaveLength(DEMO_MONTHS - 1);
+    expect(salaries).toHaveLength(DEMO_MONTHS);
   });
 
   it('gives each calendar month the same amounts whenever it is generated', () => {

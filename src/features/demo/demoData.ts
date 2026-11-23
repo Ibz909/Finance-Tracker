@@ -24,7 +24,11 @@ interface DemoItem {
 const everyOther = (n: number) => n % 2 === 0;
 const onlyWhen = (remainder: number) => (n: number) => n % 6 === remainder;
 
-/** Fictional, realistic UK monthly finances. Every amount is in pence. */
+/**
+ * Fictional, realistic UK monthly finances. Every amount is in pence.
+ * Salary is paid on the 1st so the current month never starts with
+ * spending but no income, which would make a first look misleading.
+ */
 const ITEMS: readonly DemoItem[] = [
   // Income
   {
@@ -32,7 +36,7 @@ const ITEMS: readonly DemoItem[] = [
     type: 'income',
     categoryId: 'salary',
     description: 'Monthly salary',
-    day: 25,
+    day: 1,
     amounts: [265000],
   },
   {
