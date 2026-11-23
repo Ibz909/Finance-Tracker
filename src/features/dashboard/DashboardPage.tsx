@@ -5,7 +5,6 @@ import {
   FlaskConical,
   PiggyBank,
   Plus,
-  Target,
   Wallet,
 } from 'lucide-react';
 import { useMemo } from 'react';
@@ -16,6 +15,7 @@ import { useDemoDataActions } from '../../hooks/useDemoDataActions';
 import { useReportingMonth } from '../../hooks/useReportingMonth';
 import { useToast } from '../../hooks/useToast';
 import { useTransactionDialog } from '../../hooks/useTransactionDialog';
+import { BudgetOverview } from './BudgetOverview';
 import { ComingSoonPanel } from './ComingSoonPanel';
 import { RecentTransactions } from './RecentTransactions';
 import { recentTransactions, summariseMonth } from './summary';
@@ -38,11 +38,6 @@ const UPCOMING = [
     icon: ChartPie,
   },
   {
-    title: 'Budget progress',
-    description: 'Track this month’s spending against your limits.',
-    icon: Target,
-  },
-  {
     title: 'Savings goals',
     description: 'Follow progress towards the goals you set.',
     icon: PiggyBank,
@@ -50,7 +45,7 @@ const UPCOMING = [
 ] as const;
 
 export function DashboardPage() {
-  const { transactions } = useAppData();
+  const { transactions, budgets } = useAppData();
   const { month } = useReportingMonth();
   const { openAddTransaction } = useTransactionDialog();
   const { loadDemoData } = useDemoDataActions();
@@ -92,6 +87,7 @@ export function DashboardPage() {
     <div className="space-y-6">
       <SummaryCards summary={summary} month={month} />
       <RecentTransactions transactions={recent} month={month} />
+      <BudgetOverview budgets={budgets} transactions={transactions} month={month} />
       <div className="grid gap-4 lg:grid-cols-2">
         {UPCOMING.map((panel) => (
           <ComingSoonPanel key={panel.title} {...panel} />
