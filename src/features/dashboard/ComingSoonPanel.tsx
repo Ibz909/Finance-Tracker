@@ -16,7 +16,7 @@ export function ComingSoonPanel({ title, description, icon: Icon }: ComingSoonPa
   return (
     <section
       aria-labelledby={titleId}
-      className="flex items-start gap-4 rounded-2xl border border-dashed border-border bg-surface p-5"
+      className="flex min-w-0 items-start gap-4 self-start rounded-2xl border border-dashed border-border bg-surface p-5"
     >
       <span
         aria-hidden="true"

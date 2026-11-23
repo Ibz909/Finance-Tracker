@@ -1,12 +1,4 @@
-import {
-  ChartColumn,
-  ChartLine,
-  ChartPie,
-  FlaskConical,
-  PiggyBank,
-  Plus,
-  Wallet,
-} from 'lucide-react';
+import { FlaskConical, PiggyBank, Plus, Wallet } from 'lucide-react';
 import { useMemo } from 'react';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -15,34 +7,22 @@ import { useDemoDataActions } from '../../hooks/useDemoDataActions';
 import { useReportingMonth } from '../../hooks/useReportingMonth';
 import { useToast } from '../../hooks/useToast';
 import { useTransactionDialog } from '../../hooks/useTransactionDialog';
+import {
+  categoryBreakdown,
+  DEFAULT_RANGE_MONTHS,
+  monthlyTotals,
+  monthsEndingAt,
+} from '../analytics/analytics';
+import {
+  CategoryBreakdownCard,
+  IncomeExpenseCard,
+  SpendingTrendCard,
+} from '../analytics/AnalyticsCharts';
 import { BudgetOverview } from './BudgetOverview';
 import { ComingSoonPanel } from './ComingSoonPanel';
 import { RecentTransactions } from './RecentTransactions';
 import { recentTransactions, summariseMonth } from './summary';
 import { SummaryCards } from './SummaryCards';
-
-const UPCOMING = [
-  {
-    title: 'Spending over time',
-    description: 'A month-by-month chart of what you spend.',
-    icon: ChartLine,
-  },
-  {
-    title: 'Income vs expenses',
-    description: 'Compare money in and money out across months.',
-    icon: ChartColumn,
-  },
-  {
-    title: 'Spending by category',
-    description: 'See which categories take the biggest share.',
-    icon: ChartPie,
-  },
-  {
-    title: 'Savings goals',
-    description: 'Follow progress towards the goals you set.',
-    icon: PiggyBank,
-  },
-] as const;
 
 export function DashboardPage() {
   const { transactions, budgets } = useAppData();
@@ -54,6 +34,17 @@ export function DashboardPage() {
   // Derived, never stored: recalculated only when the data or month changes.
   const summary = useMemo(() => summariseMonth(transactions, month), [transactions, month]);
   const recent = useMemo(() => recentTransactions(transactions, month), [transactions, month]);
+  const trendMonths = useMemo(() => monthsEndingAt(month, DEFAULT_RANGE_MONTHS), [month]);
+  const totals = useMemo(
+    () => monthlyTotals(transactions, trendMonths),
+    [transactions, trendMonths],
+  );
+  // The category chart reflects the selected month only, like the summary cards.
+  const thisMonth = useMemo(() => [month], [month]);
+  const breakdown = useMemo(
+    () => categoryBreakdown(transactions, thisMonth),
+    [transactions, thisMonth],
+  );
 
   if (transactions.length === 0) {
     return (
@@ -88,10 +79,19 @@ export function DashboardPage() {
       <SummaryCards summary={summary} month={month} />
       <RecentTransactions transactions={recent} month={month} />
       <BudgetOverview budgets={budgets} transactions={transactions} month={month} />
-      <div className="grid gap-4 lg:grid-cols-2">
-        {UPCOMING.map((panel) => (
-          <ComingSoonPanel key={panel.title} {...panel} />
-        ))}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SpendingTrendCard totals={totals} title="Spending over time" />
+        <IncomeExpenseCard totals={totals} />
+        <CategoryBreakdownCard
+          breakdown={breakdown}
+          months={thisMonth}
+          title="Spending by category"
+        />
+        <ComingSoonPanel
+          title="Savings goals"
+          description="Follow progress towards the goals you set."
+          icon={PiggyBank}
+        />
       </div>
     </div>
   );
