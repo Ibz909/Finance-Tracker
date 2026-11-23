@@ -11,6 +11,7 @@ import {
   monthsEndingAt,
   rangeLabel,
   spendingTrendSummary,
+  summariseRange,
   trendSeries,
 } from './analytics';
 
@@ -205,5 +206,39 @@ describe('trendSeries', () => {
       { month: '2026-09', expensesPence: 0 }, // tracked, genuinely nothing spent
       { month: '2026-10', expensesPence: 700 },
     ]);
+  });
+});
+
+describe('summariseRange', () => {
+  const months = ['2026-08', '2026-09', '2026-10', '2026-11'];
+  const totals = monthlyTotals(
+    [
+      income(300000, '2026-09-01'),
+      expense(100000, '2026-09-02'),
+      expense(120001, '2026-10-02'),
+      income(300000, '2026-11-01'),
+      expense(80000, '2026-11-02'),
+      expense(99999, '2026-07-31'), // outside the range
+    ],
+    months,
+  );
+
+  it('adds up exactly to the sum of its months', () => {
+    const summary = summariseRange(totals);
+    expect(summary.incomePence).toBe(totals.reduce((s, t) => s + t.incomePence, 0));
+    expect(summary.expensesPence).toBe(totals.reduce((s, t) => s + t.expensesPence, 0));
+    expect(summary).toMatchObject({ incomePence: 600000, expensesPence: 300001, netPence: 299999 });
+  });
+
+  it('averages spending over months since records began, to the penny', () => {
+    // August has no records, so it is not counted: 300001 / 3 = 100000.33…
+    expect(summariseRange(totals)).toMatchObject({
+      trackedMonths: 3,
+      averageMonthlySpendPence: 100000,
+    });
+  });
+
+  it('has no average when there are no records', () => {
+    expect(summariseRange(monthlyTotals([], months)).averageMonthlySpendPence).toBeNull();
   });
 });

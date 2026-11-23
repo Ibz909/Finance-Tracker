@@ -5,10 +5,11 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { useAppData } from '../../hooks/useAppData';
 import { useAnalyticsRange } from '../../hooks/useAnalyticsRange';
 import { useTransactionDialog } from '../../hooks/useTransactionDialog';
-import { categoryBreakdown, monthlyTotals } from './analytics';
+import { categoryBreakdown, monthlyTotals, summariseRange } from './analytics';
 import { CategoryBreakdownCard, IncomeExpenseCard, SpendingTrendCard } from './AnalyticsCharts';
 import { CategoryRanking } from './CategoryRanking';
 import { RangeSelector } from './RangeSelector';
+import { RangeSummary } from './RangeSummary';
 
 export function AnalyticsPage() {
   const { transactions } = useAppData();
@@ -17,6 +18,7 @@ export function AnalyticsPage() {
 
   const totals = useMemo(() => monthlyTotals(transactions, months), [transactions, months]);
   const breakdown = useMemo(() => categoryBreakdown(transactions, months), [transactions, months]);
+  const summary = useMemo(() => summariseRange(totals), [totals]);
 
   if (transactions.length === 0) {
     return (
@@ -37,6 +39,7 @@ export function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <RangeSelector value={rangeId} months={months} onChange={setRange} />
+      <RangeSummary summary={summary} months={months} />
       <div className="grid gap-6 xl:grid-cols-2">
         <IncomeExpenseCard totals={totals} />
         <SpendingTrendCard totals={totals} />

@@ -72,9 +72,11 @@ export function SpendingTrendCard({
       headingLevel={headingLevel}
       summary={spendingTrendSummary(totals)}
       emptyMessage={
-        hasEnoughTrendData(totals)
-          ? undefined
-          : 'A trend needs spending in at least two months. Add more transactions to see one here.'
+        totals.length < 2
+          ? 'Choose a range of two months or more to see a trend.'
+          : hasEnoughTrendData(totals)
+            ? undefined
+            : 'A trend needs spending in at least two months. Add more transactions to see one here.'
       }
       chart={<LazySpendingTrendChart points={trendSeries(totals)} />}
       table={
