@@ -106,6 +106,7 @@ describe('demo data actions', () => {
     const after = appDataReducer(stateWith(real), {
       type: 'demoDataLoaded',
       transactions: newDemo,
+      budgets: [],
     });
 
     expect(after.transactions).toEqual([real, ...newDemo]);
@@ -115,6 +116,7 @@ describe('demo data actions', () => {
     const after = appDataReducer(stateWith(real, oldDemo), {
       type: 'demoDataLoaded',
       transactions: newDemo,
+      budgets: [],
     });
 
     expect(after.transactions.map((t) => t.id)).toEqual(['real-1', 'demo-a', 'demo-b']);
@@ -171,5 +173,55 @@ describe('budget actions', () => {
         updatedAt: '2026-12-01T00:00:00.000Z',
       }),
     ).toBe(base);
+  });
+});
+
+describe('demo budgets', () => {
+  const realGroceries = makeBudget({ id: 'real-groceries', categoryId: 'food_groceries' });
+  const demoGroceries = makeBudget({ id: 'demo-g', categoryId: 'food_groceries', isDemo: true });
+  const demoTransport = makeBudget({ id: 'demo-t', categoryId: 'transport', isDemo: true });
+  const demoOverall = makeBudget({ id: 'demo-o', scope: 'overall', isDemo: true });
+
+  it('adds demo budgets but never overrides a real budget for the same category', () => {
+    const state = { ...createEmptyAppData(), budgets: [realGroceries] };
+
+    const after = appDataReducer(state, {
+      type: 'demoDataLoaded',
+      transactions: [],
+      budgets: [demoGroceries, demoTransport, demoOverall],
+    });
+
+    expect(after.budgets.map((b) => b.id)).toEqual(['real-groceries', 'demo-t', 'demo-o']);
+  });
+
+  it('replaces earlier demo budgets on reload', () => {
+    const state = { ...createEmptyAppData(), budgets: [demoTransport] };
+    const freshTransport = makeBudget({ id: 'demo-t2', categoryId: 'transport', isDemo: true });
+
+    const after = appDataReducer(state, {
+      type: 'demoDataLoaded',
+      transactions: [],
+      budgets: [freshTransport],
+    });
+
+    expect(after.budgets).toEqual([freshTransport]);
+  });
+
+  it('clears demo budgets along with demo transactions, keeping real ones', () => {
+    const state = {
+      ...createEmptyAppData(),
+      transactions: [makeTransaction({ isDemo: true })],
+      budgets: [realGroceries, demoTransport, demoOverall],
+    };
+
+    const after = appDataReducer(state, { type: 'demoDataCleared' });
+
+    expect(after.transactions).toEqual([]);
+    expect(after.budgets).toEqual([realGroceries]);
+  });
+
+  it('clears when only demo budgets remain', () => {
+    const state = { ...createEmptyAppData(), budgets: [demoOverall] };
+    expect(appDataReducer(state, { type: 'demoDataCleared' }).budgets).toEqual([]);
   });
 });

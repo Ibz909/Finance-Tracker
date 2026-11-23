@@ -4,10 +4,11 @@ import { createEmptyAppData } from '../../models/appData';
 import { createMemoryRepository } from '../../services/storage/memoryRepository';
 import { makeTransaction } from '../../test/fixtures';
 import { renderRoute } from '../../test/renderRoute';
-import { generateDemoTransactions } from './demoData';
+import { generateDemoBudgets, generateDemoTransactions } from './demoData';
 
 const NOW = new Date(2026, 10, 15, 12, 0);
 const DEMO_COUNT = generateDemoTransactions(NOW).length;
+const DEMO_BUDGET_COUNT = generateDemoBudgets(NOW).length;
 
 const realTransaction = makeTransaction({
   id: 'real-1',
@@ -45,7 +46,10 @@ describe('Loading demo data', () => {
     const saved = repository.load().data.transactions;
     expect(saved).toContainEqual(realTransaction);
     expect(saved.filter((t) => t.isDemo)).toHaveLength(DEMO_COUNT);
-    expect(demoSection()).toHaveTextContent(`${String(DEMO_COUNT)} demo transactions loaded.`);
+    expect(demoSection()).toHaveTextContent(
+      `${String(DEMO_COUNT)} demo transactions and ${String(DEMO_BUDGET_COUNT)} demo budgets loaded.`,
+    );
+    expect(repository.load().data.budgets).toHaveLength(DEMO_BUDGET_COUNT);
     expect(screen.getByRole('status', { name: 'Notifications' })).toHaveTextContent(
       'Demo data loaded',
     );
@@ -100,7 +104,7 @@ describe('Clearing demo data', () => {
 
     const confirm = screen.getByRole('dialog', { name: 'Clear demo data?' });
     expect(confirm).toHaveAccessibleDescription(
-      `This removes ${String(DEMO_COUNT)} demo transactions. Your own transactions are not affected.`,
+      `This removes ${String(DEMO_COUNT)} demo transactions and ${String(DEMO_BUDGET_COUNT)} demo budgets. Your own transactions and budgets are not affected.`,
     );
     await user.click(within(confirm).getByRole('button', { name: 'Cancel' }));
 

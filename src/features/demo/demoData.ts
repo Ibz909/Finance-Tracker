@@ -1,4 +1,5 @@
 import type { DefaultCategoryId } from '../../constants/categories';
+import type { Budget } from '../../models/budget';
 import type { TransactionType } from '../../models/primitives';
 import type { Transaction } from '../../models/transaction';
 import type { IsoDate, MonthKey } from '../../utils/dates';
@@ -285,4 +286,32 @@ export function generateDemoTransactions(now: Date = new Date()): Transaction[] 
     }
   }
   return transactions;
+}
+
+/**
+ * Fictional monthly limits chosen to show a realistic mix of statuses
+ * against the demo spending: groceries usually near the limit, eating out
+ * usually over, transport and entertainment usually on track.
+ */
+const DEMO_BUDGETS: readonly { key: string; categoryId?: DefaultCategoryId; limitPence: number }[] =
+  [
+    { key: 'overall', limitPence: 200000 },
+    { key: 'groceries', categoryId: 'food_groceries', limitPence: 30000 },
+    { key: 'eating-out', categoryId: 'restaurants_takeaways', limitPence: 6000 },
+    { key: 'transport', categoryId: 'transport', limitPence: 8000 },
+    { key: 'entertainment', categoryId: 'entertainment', limitPence: 6000 },
+  ];
+
+/** Demo budgets, flagged isDemo with IDs like "demo-budget-groceries". */
+export function generateDemoBudgets(now: Date = new Date()): Budget[] {
+  const timestamp = `${todayIsoDate(now)}T12:00:00.000Z`;
+  return DEMO_BUDGETS.map(({ key, categoryId, limitPence }) => ({
+    id: `${DEMO_ID_PREFIX}budget-${key}`,
+    scope: categoryId ? 'category' : 'overall',
+    ...(categoryId ? { categoryId } : {}),
+    limitPence,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    isDemo: true,
+  }));
 }

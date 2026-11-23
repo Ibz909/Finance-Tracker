@@ -7,13 +7,19 @@ import { useDemoDataActions } from '../../hooks/useDemoDataActions';
 import { useToast } from '../../hooks/useToast';
 
 export function DemoDataSettings() {
-  const { transactions } = useAppData();
+  const { transactions, budgets } = useAppData();
   const { loadDemoData, clearDemoData } = useDemoDataActions();
   const { showToast } = useToast();
   const [confirmingClear, setConfirmingClear] = useState(false);
 
-  const demoCount = transactions.filter((t) => t.isDemo).length;
-  const plural = (n: number) => `${String(n)} demo transaction${n === 1 ? '' : 's'}`;
+  const demoTransactions = transactions.filter((t) => t.isDemo).length;
+  const demoBudgets = budgets.filter((b) => b.isDemo).length;
+  const demoCount = demoTransactions + demoBudgets;
+  const count = (n: number, noun: string) => `${String(n)} demo ${noun}${n === 1 ? '' : 's'}`;
+  const summary =
+    demoBudgets > 0
+      ? `${count(demoTransactions, 'transaction')} and ${count(demoBudgets, 'budget')}`
+      : count(demoTransactions, 'transaction');
 
   return (
     <section
@@ -28,11 +34,11 @@ export function DemoDataSettings() {
             Demo data
           </h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Load about six months of fictional transactions to explore the app. Demo records are
-            labelled “Demo”, and clearing them never touches your own transactions.
+            Load about six months of fictional transactions and some example budgets to explore the
+            app. Demo records are labelled “Demo”, and clearing them never touches your own data.
           </p>
           <p className="mt-3 text-sm font-medium">
-            {demoCount > 0 ? `${plural(demoCount)} loaded.` : 'No demo data loaded.'}
+            {demoCount > 0 ? `${summary} loaded.` : 'No demo data loaded.'}
           </p>
         </div>
       </div>
@@ -62,7 +68,7 @@ export function DemoDataSettings() {
       <ConfirmDialog
         open={confirmingClear}
         title="Clear demo data?"
-        description={`This removes ${plural(demoCount)}. Your own transactions are not affected.`}
+        description={`This removes ${summary}. Your own transactions and budgets are not affected.`}
         confirmLabel="Clear demo data"
         onCancel={() => {
           setConfirmingClear(false);
