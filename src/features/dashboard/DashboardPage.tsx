@@ -1,12 +1,22 @@
-import { LayoutDashboard } from 'lucide-react';
-import { PlaceholderPage } from '../../components/ui/PlaceholderPage';
+import { useMemo } from 'react';
+import { useAppData } from '../../hooks/useAppData';
+import { useReportingMonth } from '../../hooks/useReportingMonth';
+import { RecentTransactions } from './RecentTransactions';
+import { recentTransactions, summariseMonth } from './summary';
+import { SummaryCards } from './SummaryCards';
 
 export function DashboardPage() {
+  const { transactions } = useAppData();
+  const { month } = useReportingMonth();
+
+  // Derived, never stored: recalculated only when the data or month changes.
+  const summary = useMemo(() => summariseMonth(transactions, month), [transactions, month]);
+  const recent = useMemo(() => recentTransactions(transactions, month), [transactions, month]);
+
   return (
-    <PlaceholderPage
-      icon={LayoutDashboard}
-      heading="Your financial overview"
-      description="Income, expenses, net cash flow and savings rate for the selected month will appear here once transactions can be added."
-    />
+    <div className="space-y-6">
+      <SummaryCards summary={summary} month={month} />
+      <RecentTransactions transactions={recent} month={month} />
+    </div>
   );
 }
