@@ -8,6 +8,7 @@ import { SavingsGoalsPage } from '../features/savings/SavingsGoalsPage';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { TransactionsPage } from '../features/transactions/TransactionsPage';
 import { NotFoundPage } from './NotFoundPage';
+import type { RouteHandle } from './routeHandle';
 import { RouteErrorPage } from './RouteErrorPage';
 
 /**
@@ -20,7 +21,11 @@ export const routes: RouteObject[] = [
     element: <AppShell />,
     errorElement: <RouteErrorPage />,
     children: [
-      { index: true, element: <DashboardPage /> },
+      {
+        index: true,
+        element: <DashboardPage />,
+        handle: { usesReportingMonth: true } satisfies RouteHandle,
+      },
       { path: 'transactions', element: <TransactionsPage /> },
       { path: 'budgets', element: <BudgetsPage /> },
       { path: 'analytics', element: <AnalyticsPage /> },
