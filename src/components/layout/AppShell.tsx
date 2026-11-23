@@ -1,12 +1,18 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { APP_NAME, getPageTitle } from '../../constants/navigation';
+import { MobileNav } from './MobileNav';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 
 export function AppShell() {
   const { pathname } = useLocation();
   const title = getPageTitle(pathname);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // Stable identity so MobileNav's effects don't re-subscribe every render.
+  const closeMenu = useCallback(() => {
+    setIsMenuOpen(false);
+  }, []);
 
   useEffect(() => {
     document.title = `${title} · ${APP_NAME}`;
@@ -22,7 +28,13 @@ export function AppShell() {
       </a>
       <Sidebar />
       <div className="flex min-h-dvh flex-col">
-        <TopBar title={title} />
+        <TopBar
+          title={title}
+          isMenuOpen={isMenuOpen}
+          onOpenMenu={() => {
+            setIsMenuOpen(true);
+          }}
+        />
         <main
           id="main-content"
           tabIndex={-1}
@@ -33,6 +45,7 @@ export function AppShell() {
           </div>
         </main>
       </div>
+      <MobileNav open={isMenuOpen} onClose={closeMenu} />
     </div>
   );
 }
