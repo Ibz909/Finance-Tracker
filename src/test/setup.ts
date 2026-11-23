@@ -30,6 +30,12 @@ if (!HTMLDialogElement.prototype.showModal) {
     this.open = false;
     this.dispatchEvent(new Event('close'));
   };
+  // Browsers close the top-most modal dialog on Escape; mimic that.
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    const openDialogs = document.querySelectorAll<HTMLDialogElement>('dialog[open]');
+    openDialogs[openDialogs.length - 1]?.close();
+  });
 }
 
 if (!window.matchMedia) {
