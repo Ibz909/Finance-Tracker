@@ -11,6 +11,10 @@ export type AppDataAction =
   | { type: 'transactionAdded'; transaction: Transaction }
   | { type: 'transactionUpdated'; id: string; changes: TransactionDraft; updatedAt: string }
   | { type: 'transactionDeleted'; id: string }
+  /** Replaces any existing demo records with these; real records are untouched. */
+  | { type: 'demoDataLoaded'; transactions: Transaction[] }
+  /** Removes every record flagged isDemo, and nothing else. */
+  | { type: 'demoDataCleared' }
   | { type: 'dataReset' };
 
 export function appDataReducer(state: AppData, action: AppDataAction): AppData {
@@ -34,6 +38,17 @@ export function appDataReducer(state: AppData, action: AppDataAction): AppData {
     case 'transactionDeleted': {
       const transactions = state.transactions.filter((t) => t.id !== action.id);
       // Same reference when nothing changed, so nothing is re-saved or re-rendered.
+      return transactions.length === state.transactions.length ? state : { ...state, transactions };
+    }
+
+    case 'demoDataLoaded':
+      return {
+        ...state,
+        transactions: [...state.transactions.filter((t) => !t.isDemo), ...action.transactions],
+      };
+
+    case 'demoDataCleared': {
+      const transactions = state.transactions.filter((t) => !t.isDemo);
       return transactions.length === state.transactions.length ? state : { ...state, transactions };
     }
 

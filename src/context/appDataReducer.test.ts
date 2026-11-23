@@ -93,3 +93,43 @@ describe('appDataReducer', () => {
     );
   });
 });
+
+describe('demo data actions', () => {
+  const real = makeTransaction({ id: 'real-1', isDemo: false, description: 'My rent' });
+  const oldDemo = makeTransaction({ id: 'demo-old', isDemo: true });
+  const newDemo = [
+    makeTransaction({ id: 'demo-a', isDemo: true }),
+    makeTransaction({ id: 'demo-b', isDemo: true }),
+  ];
+
+  it('adds demo data alongside real data without changing it', () => {
+    const after = appDataReducer(stateWith(real), {
+      type: 'demoDataLoaded',
+      transactions: newDemo,
+    });
+
+    expect(after.transactions).toEqual([real, ...newDemo]);
+  });
+
+  it('replaces earlier demo data instead of duplicating it', () => {
+    const after = appDataReducer(stateWith(real, oldDemo), {
+      type: 'demoDataLoaded',
+      transactions: newDemo,
+    });
+
+    expect(after.transactions.map((t) => t.id)).toEqual(['real-1', 'demo-a', 'demo-b']);
+  });
+
+  it('clears only demo records, keeping real ones exactly as they were', () => {
+    const after = appDataReducer(stateWith(oldDemo, real, ...newDemo), {
+      type: 'demoDataCleared',
+    });
+
+    expect(after.transactions).toEqual([real]);
+  });
+
+  it('keeps the same state object when there is no demo data to clear', () => {
+    const before = stateWith(real);
+    expect(appDataReducer(before, { type: 'demoDataCleared' })).toBe(before);
+  });
+});

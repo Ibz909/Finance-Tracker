@@ -1,9 +1,20 @@
-import { ChartColumn, ChartLine, ChartPie, PiggyBank, Plus, Target, Wallet } from 'lucide-react';
+import {
+  ChartColumn,
+  ChartLine,
+  ChartPie,
+  FlaskConical,
+  PiggyBank,
+  Plus,
+  Target,
+  Wallet,
+} from 'lucide-react';
 import { useMemo } from 'react';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { useAppData } from '../../hooks/useAppData';
+import { useDemoDataActions } from '../../hooks/useDemoDataActions';
 import { useReportingMonth } from '../../hooks/useReportingMonth';
+import { useToast } from '../../hooks/useToast';
 import { useTransactionDialog } from '../../hooks/useTransactionDialog';
 import { ComingSoonPanel } from './ComingSoonPanel';
 import { RecentTransactions } from './RecentTransactions';
@@ -42,6 +53,8 @@ export function DashboardPage() {
   const { transactions } = useAppData();
   const { month } = useReportingMonth();
   const { openAddTransaction } = useTransactionDialog();
+  const { loadDemoData } = useDemoDataActions();
+  const { showToast } = useToast();
 
   // Derived, never stored: recalculated only when the data or month changes.
   const summary = useMemo(() => summariseMonth(transactions, month), [transactions, month]);
@@ -52,12 +65,24 @@ export function DashboardPage() {
       <EmptyState
         icon={Wallet}
         title="Welcome to Finance Tracker"
-        description="Add your first income or expense to see your monthly cash flow, savings rate and recent activity here. Your data stays in this browser."
+        description="Add your first income or expense to see your monthly cash flow, savings rate and recent activity here. Or explore with fictional demo data first. Your data stays in this browser."
         action={
-          <Button onClick={openAddTransaction}>
-            <Plus aria-hidden="true" className="size-5" />
-            Add your first transaction
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button onClick={openAddTransaction}>
+              <Plus aria-hidden="true" className="size-5" />
+              Add your first transaction
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                loadDemoData();
+                showToast('Demo data loaded');
+              }}
+            >
+              <FlaskConical aria-hidden="true" className="size-5" />
+              Explore with demo data
+            </Button>
+          </div>
         }
       />
     );
