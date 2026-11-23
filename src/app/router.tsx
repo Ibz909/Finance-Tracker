@@ -27,7 +27,11 @@ export const routes: RouteObject[] = [
         handle: { usesReportingMonth: true } satisfies RouteHandle,
       },
       { path: 'transactions', element: <TransactionsPage /> },
-      { path: 'budgets', element: <BudgetsPage /> },
+      {
+        path: 'budgets',
+        element: <BudgetsPage />,
+        handle: { usesReportingMonth: true } satisfies RouteHandle,
+      },
       { path: 'analytics', element: <AnalyticsPage /> },
       { path: 'savings', element: <SavingsGoalsPage /> },
       { path: 'settings', element: <SettingsPage /> },
