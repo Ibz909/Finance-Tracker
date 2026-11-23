@@ -14,7 +14,10 @@ describe('StorageNotice', () => {
       repository: repositoryReturning({ status: 'empty', data: createEmptyAppData() }),
     });
 
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    // Only the (empty) notifications live region should be present.
+    expect(screen.getAllByRole('status')).toEqual([
+      screen.getByRole('status', { name: 'Notifications' }),
+    ]);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
@@ -29,14 +32,13 @@ describe('StorageNotice', () => {
       }),
     });
 
-    const notice = screen.getByRole('status');
-    expect(notice).toHaveTextContent('Some saved data couldn’t be loaded');
+    const notice = screen.getByRole('status', { name: 'Some saved data couldn’t be loaded' });
     expect(notice).toHaveTextContent('2 saved transactions were invalid and skipped.');
     expect(notice).toHaveTextContent('A copy of the original was kept');
 
     await user.click(screen.getByRole('button', { name: 'Dismiss message' }));
 
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(notice).not.toBeInTheDocument();
   });
 
   it('warns when storage is unavailable', () => {
@@ -44,6 +46,8 @@ describe('StorageNotice', () => {
       repository: repositoryReturning({ status: 'unavailable', data: createEmptyAppData() }),
     });
 
-    expect(screen.getByRole('status')).toHaveTextContent('Changes won’t be kept');
+    expect(screen.getByRole('status', { name: 'Changes won’t be kept' })).toHaveTextContent(
+      'blocking local storage',
+    );
   });
 });

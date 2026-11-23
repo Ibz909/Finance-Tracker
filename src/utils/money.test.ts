@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_AMOUNT_PENCE } from '../constants/money';
-import { formatPence, parsePoundsToPence, penceToInputValue, sumPence } from './money';
+import {
+  formatPence,
+  formatSignedPence,
+  parsePoundsToPence,
+  penceToInputValue,
+  sumPence,
+} from './money';
 
 describe('parsePoundsToPence', () => {
   it.each([
@@ -86,5 +92,12 @@ describe('sumPence', () => {
     expect(sumPence([10, 20])).toBe(30);
     expect(sumPence([])).toBe(0);
     expect(sumPence(new Set([1250, 99, 1]))).toBe(1350);
+  });
+});
+
+describe('formatSignedPence', () => {
+  it('prefixes money in with + and money out with a minus sign', () => {
+    expect(formatSignedPence(250000, 'in')).toBe('+£2,500.00');
+    expect(formatSignedPence(1250, 'out')).toBe('−£12.50');
   });
 });

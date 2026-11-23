@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CATEGORY_COLOR_COUNT } from '../models/category';
+import { CATEGORY_COLORS } from '../models/category';
 import {
   DEFAULT_CATEGORIES,
   getCategoriesByType,
@@ -21,9 +21,7 @@ describe('default categories', () => {
 
   it('use colours from the defined palette', () => {
     for (const { color } of DEFAULT_CATEGORIES) {
-      const index = Number(color.replace('chart-', ''));
-      expect(index).toBeGreaterThanOrEqual(1);
-      expect(index).toBeLessThanOrEqual(CATEGORY_COLOR_COUNT);
+      expect(CATEGORY_COLORS).toContain(color);
     }
   });
 

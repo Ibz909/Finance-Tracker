@@ -68,3 +68,11 @@ export function sumPence(values: Iterable<number>): number {
   for (const value of values) total += value;
   return total;
 }
+
+/**
+ * Amount with a direction sign for lists: "+£2,500.00" for income,
+ * "−£12.50" for spending (a true minus sign, which screen readers announce).
+ */
+export function formatSignedPence(pence: number, direction: 'in' | 'out'): string {
+  return `${direction === 'in' ? '+' : '−'}${formatPence(pence)}`;
+}

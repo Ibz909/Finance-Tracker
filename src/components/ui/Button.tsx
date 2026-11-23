@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type ButtonSize = 'md' | 'icon';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -15,6 +15,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
   primary: 'bg-accent text-accent-foreground shadow-sm hover:bg-accent/90',
   secondary: 'border border-border bg-surface text-foreground shadow-sm hover:bg-muted',
   ghost: 'text-muted-foreground hover:bg-muted hover:text-foreground',
+  danger: 'bg-negative text-negative-foreground shadow-sm hover:bg-negative/90',
 };
 
 // Every size keeps at least a 44px touch target on small screens.
