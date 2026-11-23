@@ -11,6 +11,7 @@ import {
   monthsEndingAt,
   rangeLabel,
   spendingTrendSummary,
+  trendSeries,
 } from './analytics';
 
 function income(amountPence: number, date: string): Transaction {
@@ -187,5 +188,22 @@ describe('groupSmallCategories', () => {
     });
     const sum = (list: { totalPence: number }[]) => list.reduce((s, c) => s + c.totalPence, 0);
     expect(sum(grouped)).toBe(sum(categories));
+  });
+});
+
+describe('trendSeries', () => {
+  it('leaves months before the first record as gaps, but keeps later zeros', () => {
+    const months = ['2026-07', '2026-08', '2026-09', '2026-10'];
+    const totals = monthlyTotals(
+      [income(1000, '2026-08-01'), expense(500, '2026-08-02'), expense(700, '2026-10-02')],
+      months,
+    );
+
+    expect(trendSeries(totals)).toEqual([
+      { month: '2026-07', expensesPence: null }, // before tracking began
+      { month: '2026-08', expensesPence: 500 },
+      { month: '2026-09', expensesPence: 0 }, // tracked, genuinely nothing spent
+      { month: '2026-10', expensesPence: 700 },
+    ]);
   });
 });

@@ -7,7 +7,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { MonthTotals } from '../../features/analytics/analytics';
+import type { TrendPoint } from '../../features/analytics/analytics';
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 import { formatShortMonth } from '../../utils/dates';
 import {
@@ -18,10 +18,11 @@ import {
   TOOLTIP_STYLE,
 } from './chartFormat';
 
-export function SpendingTrendChart({ totals }: { totals: readonly MonthTotals[] }) {
+export function SpendingTrendChart({ points }: { points: readonly TrendPoint[] }) {
   const reduceMotion = usePrefersReducedMotion();
-  const ticks = niceTicks(Math.max(...totals.map((t) => t.expensesPence), 0));
-  const data = totals.map((t) => ({ label: formatShortMonth(t.month), Spending: t.expensesPence }));
+  const ticks = niceTicks(Math.max(...points.map((p) => p.expensesPence ?? 0), 0));
+  // null values are drawn as gaps (months before any records).
+  const data = points.map((p) => ({ label: formatShortMonth(p.month), Spending: p.expensesPence }));
 
   return (
     <ResponsiveContainer width="100%" height={256}>
