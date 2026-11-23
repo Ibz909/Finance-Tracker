@@ -1,0 +1,44 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens
+ * -------------
+ * Raw colour values live in CSS variables on :root so a later `.dark`
+ * block can override them in one place. `@theme inline` maps them onto
+ * Tailwind utilities (bg-background, text-foreground, bg-accent, ...).
+ */
+:root {
+  --background: oklch(0.985 0.002 247);
+  --surface: oklch(1 0 0);
+  --foreground: oklch(0.21 0.01 260);
+  --muted-foreground: oklch(0.5 0.015 260);
+  --border: oklch(0.92 0.004 260);
+
+  --accent: oklch(0.55 0.12 170);
+  --accent-foreground: oklch(1 0 0);
+
+  --positive: oklch(0.55 0.14 155);
+  --negative: oklch(0.56 0.19 25);
+  --warning: oklch(0.7 0.15 70);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  --color-warning: var(--warning);
+
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    @apply bg-background text-foreground antialiased;
+  }
+}
