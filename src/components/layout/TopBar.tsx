@@ -1,6 +1,7 @@
 import { Menu } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { MOBILE_NAV_ID } from './MobileNav';
+import { ThemeToggle } from './ThemeToggle';
 
 interface TopBarProps {
   title: string;
@@ -24,6 +25,9 @@ export function TopBar({ title, isMenuOpen, onOpenMenu }: TopBarProps) {
         <Menu aria-hidden="true" className="size-5" />
       </Button>
       <h1 className="truncate text-lg font-semibold tracking-tight sm:text-xl">{title}</h1>
+      <div className="ml-auto flex items-center gap-1">
+        <ThemeToggle />
+      </div>
     </header>
   );
 }
