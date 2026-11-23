@@ -2,9 +2,12 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
 
-// Unmount rendered trees between tests so they cannot leak into each other.
+// Reset everything a test can change globally, so tests cannot leak into each other.
 afterEach(() => {
   cleanup();
+  window.localStorage.clear();
+  document.documentElement.className = '';
+  document.documentElement.style.colorScheme = '';
 });
 
 /*

@@ -8,6 +8,27 @@
       content="Track your income, spending, budgets and savings goals. Your data stays in your browser."
     />
     <title>Finance Tracker</title>
+    <!--
+      Applies the saved theme before the first paint to avoid a flash of the
+      wrong theme. Mirrors src/services/theme.ts: an unknown or missing value
+      means "system". Keep the storage key in sync with storageKeys.ts.
+    -->
+    <script>
+      (function () {
+        var preference = null;
+        try {
+          preference = window.localStorage.getItem('finance-tracker:theme');
+        } catch (error) {
+          // Storage unavailable: fall through to the system setting.
+        }
+        var isDark =
+          preference === 'dark' ||
+          (preference !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var root = document.documentElement;
+        root.classList.toggle('dark', isDark);
+        root.style.colorScheme = isDark ? 'dark' : 'light';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

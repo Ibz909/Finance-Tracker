@@ -1,13 +1,22 @@
 @import 'tailwindcss';
 
+/* `dark:` utilities apply when <html> has the .dark class (set by the theme script). */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+}
+
 /*
  * Design tokens
  * -------------
- * Raw colour values live in CSS variables on :root so a later `.dark`
- * block can override them in one place. `@theme inline` maps them onto
- * Tailwind utilities (bg-background, text-foreground, bg-accent, ...).
+ * Raw colour values live in CSS variables on :root and are overridden in
+ * one place by the `.dark` block. `@theme inline` maps them onto Tailwind
+ * utilities (bg-background, text-foreground, bg-accent, ...).
  */
 :root {
+  color-scheme: light;
+
   --background: oklch(0.985 0.002 247);
   --surface: oklch(1 0 0);
   --foreground: oklch(0.21 0.01 260);
@@ -15,12 +24,35 @@
   --muted: oklch(0.965 0.003 260);
   --border: oklch(0.92 0.004 260);
 
-  --accent: oklch(0.55 0.12 170);
+  --accent: oklch(0.5 0.11 170);
   --accent-foreground: oklch(1 0 0);
 
-  --positive: oklch(0.55 0.14 155);
+  --positive: oklch(0.52 0.13 155);
   --negative: oklch(0.56 0.19 25);
-  --warning: oklch(0.7 0.15 70);
+  --warning: oklch(0.57 0.13 60);
+}
+
+/*
+ * Dark palette. Surfaces step up in lightness rather than relying on
+ * shadows, and accent/status colours are lighter so text on dark surfaces
+ * keeps at least WCAG AA contrast (4.5:1).
+ */
+.dark {
+  color-scheme: dark;
+
+  --background: oklch(0.17 0.01 260);
+  --surface: oklch(0.21 0.012 260);
+  --foreground: oklch(0.96 0.005 260);
+  --muted-foreground: oklch(0.72 0.015 260);
+  --muted: oklch(0.26 0.012 260);
+  --border: oklch(0.3 0.012 260);
+
+  --accent: oklch(0.74 0.13 170);
+  --accent-foreground: oklch(0.18 0.02 170);
+
+  --positive: oklch(0.74 0.15 155);
+  --negative: oklch(0.71 0.17 25);
+  --warning: oklch(0.82 0.14 75);
 }
 
 @theme inline {
