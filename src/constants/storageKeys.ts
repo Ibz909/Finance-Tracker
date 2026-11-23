@@ -6,4 +6,8 @@
  */
 export const STORAGE_KEYS = {
   theme: 'finance-tracker:theme',
+  /** All financial data, as a versioned envelope. */
+  data: 'finance-tracker:data',
+  /** Prefix for copies of unreadable data kept before it is replaced. */
+  dataBackupPrefix: 'finance-tracker:data-backup:',
 } as const;
