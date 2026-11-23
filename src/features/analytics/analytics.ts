@@ -122,6 +122,54 @@ export function groupSmallCategories(
   ];
 }
 
+export interface TrendPoint {
+  month: MonthKey;
+  /** null for months before any records exist: unknown, not £0. */
+  expensesPence: number | null;
+}
+
+/**
+ * Spending per month for the trend line. Months before the first month
+ * with any record are gaps rather than zeros, so a range that starts
+ * before you began tracking doesn't show a misleading drop to £0.
+ */
+export function trendSeries(totals: readonly MonthTotals[]): TrendPoint[] {
+  const firstTracked = totals.findIndex((t) => t.incomePence > 0 || t.expensesPence > 0);
+  return totals.map((t, index) => ({
+    month: t.month,
+    expensesPence: firstTracked === -1 || index < firstTracked ? null : t.expensesPence,
+  }));
+}
+
+export interface RangeSummary {
+  incomePence: number;
+  expensesPence: number;
+  netPence: number;
+  /** Months in the range from the first record onwards. */
+  trackedMonths: number;
+  /** Spending per tracked month, rounded to the penny; null before any records. */
+  averageMonthlySpendPence: number | null;
+}
+
+/**
+ * Totals for a whole range, built by adding up its months, so a range total
+ * always equals the sum of the months shown in the charts.
+ */
+export function summariseRange(totals: readonly MonthTotals[]): RangeSummary {
+  const incomePence = totals.reduce((sum, t) => sum + t.incomePence, 0);
+  const expensesPence = totals.reduce((sum, t) => sum + t.expensesPence, 0);
+  // Average only over months since tracking began, like the trend line.
+  const trackedMonths = trendSeries(totals).filter((p) => p.expensesPence !== null).length;
+  return {
+    incomePence,
+    expensesPence,
+    netPence: incomePence - expensesPence,
+    trackedMonths,
+    averageMonthlySpendPence:
+      trackedMonths === 0 ? null : Math.round(expensesPence / trackedMonths),
+  };
+}
+
 /** A trend needs at least two months with spending; one point is not a trend. */
 export function hasEnoughTrendData(totals: readonly MonthTotals[]): boolean {
   return totals.filter((t) => t.expensesPence > 0).length >= 2;

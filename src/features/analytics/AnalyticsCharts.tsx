@@ -15,6 +15,7 @@ import {
   incomeExpenseSummary,
   rangeLabel,
   spendingTrendSummary,
+  trendSeries,
 } from './analytics';
 
 /*
@@ -71,19 +72,26 @@ export function SpendingTrendCard({
       headingLevel={headingLevel}
       summary={spendingTrendSummary(totals)}
       emptyMessage={
-        hasEnoughTrendData(totals)
-          ? undefined
-          : 'A trend needs spending in at least two months. Add more transactions to see one here.'
+        totals.length < 2
+          ? 'Choose a range of two months or more to see a trend.'
+          : hasEnoughTrendData(totals)
+            ? undefined
+            : 'A trend needs spending in at least two months. Add more transactions to see one here.'
       }
-      chart={<LazySpendingTrendChart totals={totals} />}
+      chart={<LazySpendingTrendChart points={trendSeries(totals)} />}
       table={
         <DataTable
           caption={`${title} by month`}
-          rows={totals}
+          rows={trendSeries(totals)}
           rowKey={(t) => t.month}
           columns={[
             { header: 'Month', cell: (t) => formatMonthLabel(t.month) },
-            { header: 'Spending', cell: (t) => formatPence(t.expensesPence), numeric: true },
+            {
+              header: 'Spending',
+              cell: (t) =>
+                t.expensesPence === null ? 'No records yet' : formatPence(t.expensesPence),
+              numeric: true,
+            },
           ]}
         />
       }
