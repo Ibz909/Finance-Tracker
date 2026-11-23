@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { APP_NAME, getPageTitle } from '../../constants/navigation';
+import { DemoDataBanner } from './DemoDataBanner';
 import { MobileNav } from './MobileNav';
 import { Sidebar } from './Sidebar';
 import { StorageNotice } from './StorageNotice';
@@ -43,6 +44,7 @@ export function AppShell() {
         >
           <div className="mx-auto max-w-7xl">
             <StorageNotice />
+            <DemoDataBanner />
             <Outlet />
           </div>
         </main>
