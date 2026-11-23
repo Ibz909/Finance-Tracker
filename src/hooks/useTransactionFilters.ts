@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router';
 import type { TransactionFilters } from '../features/transactions/transactionFilters';
 import {
@@ -20,24 +20,40 @@ export function useTransactionFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = useMemo(() => parseFilters(searchParams), [searchParams]);
 
-  const updateFilters = useCallback(
-    (changes: Partial<TransactionFilters>) => {
-      setSearchParams(
-        (previous) => writeFilters(previous, applyFilterChange(parseFilters(previous), changes)),
-        { replace: true },
-      );
+  /*
+   * The most recent parameters we have written. React Router's functional
+   * setSearchParams builds on the URL from the *last render*, so changes
+   * arriving before the page re-renders (fast typing, several controls at
+   * once) each started from the same old URL and overwrote one another.
+   * Building on this ref chains them correctly. It is re-synced whenever
+   * the URL changes for any other reason, such as Back or a link.
+   */
+  const latestParams = useRef(searchParams);
+  useLayoutEffect(() => {
+    latestParams.current = searchParams;
+  }, [searchParams]);
+
+  const write = useCallback(
+    (next: URLSearchParams) => {
+      latestParams.current = next;
+      setSearchParams(next, { replace: true });
     },
     [setSearchParams],
   );
 
+  const updateFilters = useCallback(
+    (changes: Partial<TransactionFilters>) => {
+      const current = latestParams.current;
+      write(writeFilters(current, applyFilterChange(parseFilters(current), changes)));
+    },
+    [write],
+  );
+
   /** Clears every filter but keeps the chosen sort order. */
   const resetFilters = useCallback(() => {
-    setSearchParams(
-      (previous) =>
-        writeFilters(previous, { ...DEFAULT_FILTERS, sort: parseFilters(previous).sort }),
-      { replace: true },
-    );
-  }, [setSearchParams]);
+    const current = latestParams.current;
+    write(writeFilters(current, { ...DEFAULT_FILTERS, sort: parseFilters(current).sort }));
+  }, [write]);
 
   return { filters, updateFilters, resetFilters };
 }
