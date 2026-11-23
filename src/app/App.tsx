@@ -1,5 +1,6 @@
 import { RouterProvider } from 'react-router';
 import { AppDataProvider } from '../context/AppDataProvider';
+import { ReportingMonthProvider } from '../context/ReportingMonthProvider';
 import { ThemeProvider } from '../context/ThemeProvider';
 import { ToastProvider } from '../context/ToastProvider';
 import { TransactionDialogProvider } from '../context/TransactionDialogProvider';
@@ -11,7 +12,9 @@ export function App() {
       <AppDataProvider>
         <ToastProvider>
           <TransactionDialogProvider>
-            <RouterProvider router={router} />
+            <ReportingMonthProvider>
+              <RouterProvider router={router} />
+            </ReportingMonthProvider>
           </TransactionDialogProvider>
         </ToastProvider>
       </AppDataProvider>
