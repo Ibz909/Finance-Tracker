@@ -32,11 +32,8 @@ export const routes: RouteObject[] = [
         element: <BudgetsPage />,
         handle: { usesReportingMonth: true } satisfies RouteHandle,
       },
-      {
-        path: 'analytics',
-        element: <AnalyticsPage />,
-        handle: { usesReportingMonth: true } satisfies RouteHandle,
-      },
+      // Analytics has its own date-range selector instead of the month picker.
+      { path: 'analytics', element: <AnalyticsPage /> },
       { path: 'savings', element: <SavingsGoalsPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },

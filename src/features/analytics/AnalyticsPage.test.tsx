@@ -43,9 +43,9 @@ describe('Analytics page', () => {
   it('states the range and summarises every chart in words', () => {
     renderRoute('/analytics', { repository: seeded(...data) });
 
-    expect(
-      screen.getByText(/^Showing the 6 months to November 2026: Jun – Nov 2026/),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Showing', { exact: false, selector: 'p' })).toHaveTextContent(
+      'Showing Jun – Nov 2026',
+    );
     expect(region('Income vs expenses')).toHaveTextContent(
       'Jun – Nov 2026: £5,000.00 in and £2,800.00 out, leaving £2,200.00 more coming in.',
     );
@@ -96,19 +96,16 @@ describe('Analytics page', () => {
     expect(region('Category analysis')).toHaveTextContent('No spending in Jun – Nov 2026.');
   });
 
-  it('moves the range with the reporting month', async () => {
+  it('switches range with the selector', async () => {
     const { user } = renderRoute('/analytics', { repository: seeded(...data) });
 
-    await user.click(screen.getByRole('button', { name: 'Previous month, October 2026' }));
+    await user.click(screen.getByRole('radio', { name: 'Last 12 months' }));
 
-    expect(
-      screen.getByText(/^Showing the 6 months to October 2026: May – Oct 2026/),
-    ).toBeInTheDocument();
-    // May's shopping is now in range.
-    expect(region('Spending breakdown')).toHaveTextContent('across 3 categories');
-    expect(within(region('Category analysis')).getAllByRole('listitem')[0]).toHaveTextContent(
-      'Rent & Housing',
+    expect(screen.getByText('Showing', { exact: false, selector: 'p' })).toHaveTextContent(
+      'Showing Dec 2025 – Nov 2026',
     );
+    // May's shopping is now in range.
+    expect(region('Spending breakdown')).toHaveTextContent('across 4 categories');
   });
 });
 
