@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import {
   buildAddTransaction,
+  buildImportTransactions,
   buildUpdateTransaction,
 } from '../features/transactions/transactionCommands';
 import { nowIsoDateTime } from '../utils/dates';
@@ -25,6 +26,14 @@ export function useTransactionActions() {
       },
       updateTransaction: (id: string, input: unknown) => {
         const result = buildUpdateTransaction(id, input, { now: nowIsoDateTime() });
+        if (result.ok) dispatch(result.value);
+        return result;
+      },
+      importTransactions: (drafts: readonly unknown[]) => {
+        const result = buildImportTransactions(drafts, {
+          newId: () => crypto.randomUUID(),
+          now: nowIsoDateTime(),
+        });
         if (result.ok) dispatch(result.value);
         return result;
       },
