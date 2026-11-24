@@ -1,5 +1,6 @@
 import type { Budget } from './budget';
 import type { RecurringSchedule } from './recurring';
+import type { GoalContribution, SavingsGoal } from './savings';
 import type { Settings } from './settings';
 import { DEFAULT_SETTINGS } from './settings';
 import type { Transaction } from './transaction';
@@ -14,6 +15,10 @@ export interface AppData {
   budgets: Budget[];
   /** Added in schema version 3. */
   recurringSchedules: RecurringSchedule[];
+  /** Added in schema version 4. */
+  savingsGoals: SavingsGoal[];
+  /** Added in schema version 4. Each belongs to one goal. */
+  goalContributions: GoalContribution[];
   settings: Settings;
 }
 
@@ -22,6 +27,8 @@ export function createEmptyAppData(): AppData {
     transactions: [],
     budgets: [],
     recurringSchedules: [],
+    savingsGoals: [],
+    goalContributions: [],
     settings: { ...DEFAULT_SETTINGS },
   };
 }
