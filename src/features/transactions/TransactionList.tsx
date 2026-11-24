@@ -45,8 +45,9 @@ function TransactionRow({
       <CategoryIcon categoryId={categoryId} />
 
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 font-medium">
-          <span className="truncate">{description}</span>
+        {/* Text wraps rather than truncating, so nothing is cut off on narrow screens. */}
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
+          <span className="min-w-0 break-words">{description}</span>
           {recurringScheduleId && (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
               <Repeat aria-hidden="true" className="size-3" />
@@ -59,7 +60,7 @@ function TransactionRow({
             </span>
           )}
         </p>
-        <p className="truncate text-sm text-muted-foreground">
+        <p className="text-sm break-words text-muted-foreground">
           {getCategory(categoryId)?.label ?? 'Unknown category'} ·{' '}
           <time dateTime={date}>{formatDisplayDate(date)}</time>
         </p>

@@ -155,7 +155,7 @@ export function GoalCard({
                         <time dateTime={c.date}>{formatDisplayDate(c.date)}</time>
                       </span>
                     </p>
-                    {c.note && <p className="truncate text-muted-foreground">{c.note}</p>}
+                    {c.note && <p className="break-words text-muted-foreground">{c.note}</p>}
                   </div>
                   <Button
                     variant="ghost"

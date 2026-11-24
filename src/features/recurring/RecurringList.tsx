@@ -39,8 +39,8 @@ function RecurringRow({
       <CategoryIcon categoryId={categoryId} />
 
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 font-medium">
-          <span className="truncate">{description}</span>
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
+          <span className="min-w-0 break-words">{description}</span>
           {isDemo && (
             <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
               Demo
