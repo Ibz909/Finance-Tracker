@@ -23,14 +23,16 @@
   --muted-foreground: oklch(0.5 0.015 260);
   --muted: oklch(0.965 0.003 260);
   --border: oklch(0.92 0.004 260);
+  /* Form fields need a 3:1 outline (WCAG 1.4.11); cards keep the softer --border. */
+  --input-border: oklch(0.64 0.01 260);
 
   --accent: oklch(0.5 0.11 170);
   --accent-foreground: oklch(1 0 0);
 
-  --positive: oklch(0.52 0.13 155);
-  --negative: oklch(0.56 0.19 25);
+  --positive: oklch(0.5 0.13 155);
+  --negative: oklch(0.53 0.19 25);
   --negative-foreground: oklch(1 0 0);
-  --warning: oklch(0.57 0.13 60);
+  --warning: oklch(0.5 0.12 60);
 
   /* Category / chart palette: distinct hues at similar lightness. */
   --chart-1: oklch(0.6 0.13 170);
@@ -61,6 +63,7 @@
   --muted-foreground: oklch(0.72 0.015 260);
   --muted: oklch(0.26 0.012 260);
   --border: oklch(0.3 0.012 260);
+  --input-border: oklch(0.55 0.012 260);
 
   --accent: oklch(0.74 0.13 170);
   --accent-foreground: oklch(0.18 0.02 170);
@@ -91,6 +94,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-input-border: var(--input-border);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-positive: var(--positive);
