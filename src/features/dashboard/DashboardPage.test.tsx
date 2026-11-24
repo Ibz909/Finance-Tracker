@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createEmptyAppData } from '../../models/appData';
 import type { Transaction } from '../../models/transaction';
 import { createMemoryRepository } from '../../services/storage/memoryRepository';
-import { makeTransaction } from '../../test/fixtures';
+import { makeBudget, makeGoal, makeSchedule, makeTransaction } from '../../test/fixtures';
 import { renderRoute } from '../../test/renderRoute';
 
 // renderRoute fixes "today" at 15 November 2026.
@@ -50,6 +50,24 @@ describe('Dashboard', () => {
     expect(screen.getByRole('heading', { name: 'Welcome to Finance Tracker' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Add your first transaction' }));
     expect(screen.getByRole('dialog', { name: 'Add transaction' })).toBeInTheDocument();
+  });
+
+  it.each([
+    ['a savings goal', { savingsGoals: [makeGoal({ name: 'Holiday' })] }, 'Savings goals'],
+    ['a budget', { budgets: [makeBudget()] }, 'Budget progress'],
+    [
+      'a recurring transaction not yet due',
+      { recurringSchedules: [makeSchedule({ nextDueDate: '2026-12-01' })] },
+      'Recent transactions',
+    ],
+  ])('shows the dashboard, not the welcome, with only %s', (_label, data, region) => {
+    renderRoute('/', { repository: createMemoryRepository({ ...createEmptyAppData(), ...data }) });
+
+    expect(
+      screen.queryByRole('heading', { name: 'Welcome to Finance Tracker' }),
+    ).not.toBeInTheDocument();
+    expect(card(region)).toBeVisible();
+    expect(card('Recent transactions')).toHaveTextContent('No transactions in November 2026.');
   });
 
   it('summarises the current month from stored transactions', () => {

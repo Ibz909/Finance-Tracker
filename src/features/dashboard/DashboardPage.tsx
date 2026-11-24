@@ -26,7 +26,8 @@ import { recentTransactions, summariseMonth } from './summary';
 import { SummaryCards } from './SummaryCards';
 
 export function DashboardPage() {
-  const { transactions, budgets, savingsGoals, goalContributions } = useAppData();
+  const { transactions, budgets, recurringSchedules, savingsGoals, goalContributions } =
+    useAppData();
   const today = todayIsoDate(useClock()());
   const { month } = useReportingMonth();
   const { openAddTransaction } = useTransactionDialog();
@@ -48,7 +49,16 @@ export function DashboardPage() {
     [transactions, thisMonth],
   );
 
-  if (transactions.length === 0) {
+  // Welcome only someone with nothing set up yet. Budgets, goals or recurring
+  // items without transactions still get the dashboard: every section has
+  // its own empty state, and the budget and savings panels have content.
+  const hasAnyData =
+    transactions.length > 0 ||
+    budgets.length > 0 ||
+    recurringSchedules.length > 0 ||
+    savingsGoals.length > 0;
+
+  if (!hasAnyData) {
     return (
       <EmptyState
         icon={Wallet}
