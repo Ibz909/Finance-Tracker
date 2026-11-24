@@ -5,6 +5,7 @@ import { budgetKey, budgetSchema } from '../../models/budget';
 import { createEmptyAppData } from '../../models/appData';
 import type { RecurringSchedule } from '../../models/recurring';
 import { recurringScheduleSchema } from '../../models/recurring';
+import { goalContributionSchema, savingsGoalSchema } from '../../models/savings';
 import { settingsSchema } from '../../models/settings';
 import type { Transaction } from '../../models/transaction';
 import { transactionSchema } from '../../models/transaction';
@@ -23,6 +24,8 @@ const dataShapeSchema = z.object({
   transactions: z.array(z.unknown()),
   budgets: z.array(z.unknown()),
   recurringSchedules: z.array(z.unknown()),
+  savingsGoals: z.array(z.unknown()),
+  goalContributions: z.array(z.unknown()),
   settings: z.unknown(),
 });
 
@@ -92,15 +95,27 @@ export function decodeAppData(raw: unknown): DecodeResult {
     }
   }
 
+  const savingsGoals = validRecords(shape.data.savingsGoals, (c) => savingsGoalSchema.safeParse(c));
+  const goalIds = new Set(savingsGoals.records.map((g) => g.id));
+  // A contribution whose goal is missing can never be shown, so it is skipped.
+  const goalContributions = validRecords(shape.data.goalContributions, (c) => {
+    const parsed = goalContributionSchema.safeParse(c);
+    return parsed.success && goalIds.has(parsed.data.goalId) ? parsed : { success: false };
+  });
+
   const settings = settingsSchema.safeParse(shape.data.settings);
   const data: AppData = {
     transactions,
     budgets,
     recurringSchedules,
+    savingsGoals: savingsGoals.records,
+    goalContributions: goalContributions.records,
     settings: settings.success ? settings.data : createEmptyAppData().settings,
   };
 
-  const skippedRecords = skippedTransactions + skippedBudgets + skippedSchedules;
+  const skippedGoalRecords = savingsGoals.skipped + goalContributions.skipped;
+  const skippedRecords =
+    skippedTransactions + skippedBudgets + skippedSchedules + skippedGoalRecords;
   const problems: string[] = [];
   if (skippedTransactions > 0) {
     problems.push(
@@ -117,9 +132,34 @@ export function decodeAppData(raw: unknown): DecodeResult {
       `${String(skippedSchedules)} saved recurring transaction${skippedSchedules === 1 ? ' was' : 's were'} invalid and skipped.`,
     );
   }
+  if (skippedGoalRecords > 0) {
+    problems.push(
+      `${String(skippedGoalRecords)} saved savings goal record${skippedGoalRecords === 1 ? ' was' : 's were'} invalid and skipped.`,
+    );
+  }
   if (!settings.success) problems.push('Settings were invalid and have been reset.');
 
   return problems.length === 0
     ? { kind: 'valid', data }
     : { kind: 'partial', data, problem: problems.join(' '), skippedRecords };
+}
+
+/** Keeps records that pass `parse`, dropping invalid ones and repeated IDs. */
+function validRecords<T extends { id: string }>(
+  candidates: readonly unknown[],
+  parse: (candidate: unknown) => { success: true; data: T } | { success: false },
+): { records: T[]; skipped: number } {
+  const records: T[] = [];
+  const seen = new Set<string>();
+  let skipped = 0;
+  for (const candidate of candidates) {
+    const parsed = parse(candidate);
+    if (parsed.success && !seen.has(parsed.data.id)) {
+      seen.add(parsed.data.id);
+      records.push(parsed.data);
+    } else {
+      skipped++;
+    }
+  }
+  return { records, skipped };
 }

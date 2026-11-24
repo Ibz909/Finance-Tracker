@@ -1,6 +1,7 @@
 import type { DefaultCategoryId } from '../../constants/categories';
 import type { Budget } from '../../models/budget';
 import type { TransactionType } from '../../models/primitives';
+import type { GoalContribution, SavingsGoal } from '../../models/savings';
 import type { Transaction } from '../../models/transaction';
 import type { IsoDate, MonthKey } from '../../utils/dates';
 import { currentMonthKey, shiftMonth, todayIsoDate } from '../../utils/dates';
@@ -314,4 +315,64 @@ export function generateDemoBudgets(now: Date = new Date()): Budget[] {
     updatedAt: timestamp,
     isDemo: true,
   }));
+}
+
+/**
+ * Two fictional goals with monthly deposits over the demo period: a steady
+ * emergency fund with no date, and a holiday with a target date next July,
+ * so both the "no date" and "save £X a month" displays are shown.
+ * Nothing is dated after today.
+ */
+export function generateDemoGoals(now: Date = new Date()): {
+  goals: SavingsGoal[];
+  contributions: GoalContribution[];
+} {
+  const today = todayIsoDate(now);
+  const thisMonth = currentMonthKey(now);
+  const timestamp = `${today}T12:00:00.000Z`;
+  const holidayYear = Number(thisMonth.slice(0, 4)) + (Number(thisMonth.slice(5, 7)) >= 7 ? 1 : 0);
+
+  const goals: SavingsGoal[] = [
+    {
+      id: `${DEMO_ID_PREFIX}goal-emergency`,
+      name: 'Emergency fund',
+      targetPence: 300000,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      isDemo: true,
+    },
+    {
+      id: `${DEMO_ID_PREFIX}goal-holiday`,
+      name: 'Summer holiday',
+      targetPence: 150000,
+      targetDate: `${String(holidayYear)}-07-31`,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      isDemo: true,
+    },
+  ];
+
+  const plan = [
+    { goal: 'emergency', day: 2, amountPence: 25000, months: DEMO_MONTHS },
+    { goal: 'holiday', day: 15, amountPence: 15000, months: 4 },
+  ];
+  const contributions: GoalContribution[] = [];
+  for (const { goal, day, amountPence, months } of plan) {
+    for (let offset = months - 1; offset >= 0; offset--) {
+      const month = shiftMonth(thisMonth, -offset);
+      const date = `${month}-${String(day).padStart(2, '0')}`;
+      if (date > today) continue;
+      contributions.push({
+        id: `${DEMO_ID_PREFIX}contribution-${goal}-${month}`,
+        goalId: `${DEMO_ID_PREFIX}goal-${goal}`,
+        kind: 'deposit',
+        amountPence,
+        date,
+        note: 'Monthly transfer',
+        createdAt: `${date}T12:00:00.000Z`,
+        isDemo: true,
+      });
+    }
+  }
+  return { goals, contributions };
 }

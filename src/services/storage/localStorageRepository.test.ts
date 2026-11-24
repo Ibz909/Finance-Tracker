@@ -76,6 +76,8 @@ describe('localStorageRepository', () => {
         transactions: [good, { broken: true }],
         budgets: [],
         recurringSchedules: [],
+        savingsGoals: [],
+        goalContributions: [],
         settings: { currency: 'GBP' },
       },
     });

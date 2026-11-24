@@ -1,5 +1,6 @@
 import type { Budget } from '../models/budget';
 import type { RecurringSchedule } from '../models/recurring';
+import type { GoalContribution, SavingsGoal } from '../models/savings';
 import type { Transaction } from '../models/transaction';
 
 let counter = 0;
@@ -57,6 +58,38 @@ export function makeSchedule(overrides: Partial<RecurringSchedule> = {}): Recurr
     paused: false,
     createdAt: '2026-09-01T12:00:00.000Z',
     updatedAt: '2026-09-01T12:00:00.000Z',
+    isDemo: false,
+    ...overrides,
+  };
+}
+
+/** A valid savings goal; defaults to a £3,000 emergency fund with no date. */
+export function makeGoal(overrides: Partial<SavingsGoal> = {}): SavingsGoal {
+  counter += 1;
+  return {
+    id: `goal-${String(counter)}`,
+    name: 'Emergency fund',
+    targetPence: 300000,
+    createdAt: '2026-09-01T12:00:00.000Z',
+    updatedAt: '2026-09-01T12:00:00.000Z',
+    isDemo: false,
+    ...overrides,
+  };
+}
+
+/** A valid £100 deposit into `goalId`. */
+export function makeContribution(
+  goalId: string,
+  overrides: Partial<GoalContribution> = {},
+): GoalContribution {
+  counter += 1;
+  return {
+    id: `contribution-${String(counter)}`,
+    goalId,
+    kind: 'deposit',
+    amountPence: 10000,
+    date: '2026-10-01',
+    createdAt: '2026-10-01T12:00:00.000Z',
     isDemo: false,
     ...overrides,
   };

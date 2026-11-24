@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { makeBudget, makeSchedule, makeTransaction } from '../../test/fixtures';
+import {
+  makeBudget,
+  makeContribution,
+  makeGoal,
+  makeSchedule,
+  makeTransaction,
+} from '../../test/fixtures';
 import { decodeAppData } from './decode';
 import { CURRENT_SCHEMA_VERSION } from './envelope';
 
@@ -10,6 +16,8 @@ function envelope(data: unknown, schemaVersion = CURRENT_SCHEMA_VERSION) {
 const settings = { currency: 'GBP' };
 const budgets: unknown[] = [];
 const recurringSchedules: unknown[] = [];
+/** Version 4 sections, empty unless a test is about goals. */
+const goals = { savingsGoals: [], goalContributions: [] };
 
 describe('decodeAppData', () => {
   it('accepts fully valid data', () => {
@@ -18,10 +26,10 @@ describe('decodeAppData', () => {
       makeTransaction({ type: 'income', categoryId: 'salary' }),
     ];
     expect(
-      decodeAppData(envelope({ transactions, budgets, recurringSchedules, settings })),
+      decodeAppData(envelope({ transactions, budgets, recurringSchedules, ...goals, settings })),
     ).toEqual({
       kind: 'valid',
-      data: { transactions, budgets, recurringSchedules, settings },
+      data: { transactions, budgets, recurringSchedules, ...goals, settings },
     });
   });
 
@@ -51,6 +59,7 @@ describe('decodeAppData', () => {
         transactions: [good, { ...makeTransaction(), amountPence: -5 }, 'garbage'],
         budgets,
         recurringSchedules,
+        ...goals,
         settings,
       }),
     );
@@ -66,7 +75,7 @@ describe('decodeAppData', () => {
     const first = makeTransaction({ id: 'dup', description: 'First' });
     const second = makeTransaction({ id: 'dup', description: 'Second' });
     const result = decodeAppData(
-      envelope({ transactions: [first, second], budgets, recurringSchedules, settings }),
+      envelope({ transactions: [first, second], budgets, recurringSchedules, ...goals, settings }),
     );
 
     expect(result).toMatchObject({ kind: 'partial', skippedRecords: 1 });
@@ -76,12 +85,24 @@ describe('decodeAppData', () => {
   it('resets invalid settings but keeps transactions', () => {
     const transactions = [makeTransaction()];
     const result = decodeAppData(
-      envelope({ transactions, budgets, recurringSchedules, settings: { currency: 'USD' } }),
+      envelope({
+        transactions,
+        budgets,
+        recurringSchedules,
+        ...goals,
+        settings: { currency: 'USD' },
+      }),
     );
 
     expect(result).toMatchObject({ kind: 'partial', skippedRecords: 0 });
     if (result.kind === 'partial') {
-      expect(result.data).toEqual({ transactions, budgets, recurringSchedules: [], settings });
+      expect(result.data).toEqual({
+        transactions,
+        budgets,
+        recurringSchedules: [],
+        ...goals,
+        settings,
+      });
       expect(result.problem).toMatch(/Settings were invalid/);
     }
   });
@@ -92,7 +113,7 @@ describe('decodeAppData', () => {
 
     expect(result).toEqual({
       kind: 'valid',
-      data: { transactions, budgets: [], recurringSchedules: [], settings },
+      data: { transactions, budgets: [], recurringSchedules: [], ...goals, settings },
     });
   });
 
@@ -105,7 +126,7 @@ describe('decodeAppData', () => {
 
     expect(result).toEqual({
       kind: 'valid',
-      data: { transactions: [], budgets, recurringSchedules: [], settings },
+      data: { transactions: [], budgets, recurringSchedules: [], ...goals, settings },
     });
   });
 
@@ -121,6 +142,7 @@ describe('decodeAppData', () => {
           makeSchedule({ id: 's2', frequency: 'daily' as never }),
           makeSchedule({ id: 's3', startDate: '2026-05-01', endDate: '2026-04-01' }),
         ],
+        ...goals,
         settings,
       }),
     );
@@ -129,6 +151,43 @@ describe('decodeAppData', () => {
     if (result.kind === 'partial') {
       expect(result.data.recurringSchedules).toEqual([rent]);
       expect(result.problem).toMatch(/3 saved recurring transactions were invalid/);
+    }
+  });
+
+  it('upgrades version 3 data, which had no savings goals', () => {
+    const result = decodeAppData({
+      schemaVersion: 3,
+      data: { transactions: [], budgets: [], recurringSchedules: [], settings },
+    });
+    expect(result).toEqual({
+      kind: 'valid',
+      data: { transactions: [], budgets: [], recurringSchedules: [], ...goals, settings },
+    });
+  });
+
+  it('keeps valid goals and contributions, skipping invalid ones and orphans', () => {
+    const goal = makeGoal({ id: 'g1' });
+    const deposit = makeContribution('g1');
+    const result = decodeAppData(
+      envelope({
+        transactions: [],
+        budgets: [],
+        recurringSchedules: [],
+        savingsGoals: [goal, makeGoal({ id: 'g1' }), { ...makeGoal(), targetPence: 0 }],
+        goalContributions: [
+          deposit,
+          makeContribution('missing-goal'),
+          { ...makeContribution('g1'), kind: 'transfer' },
+        ],
+        settings,
+      }),
+    );
+
+    expect(result).toMatchObject({ kind: 'partial', skippedRecords: 4 });
+    if (result.kind === 'partial') {
+      expect(result.data.savingsGoals).toEqual([goal]);
+      expect(result.data.goalContributions).toEqual([deposit]);
+      expect(result.problem).toMatch(/4 saved savings goal records were invalid/);
     }
   });
 
@@ -147,6 +206,7 @@ describe('decodeAppData', () => {
           { ...makeBudget({ id: 'b6' }), limitPence: 0 },
         ],
         recurringSchedules,
+        ...goals,
         settings,
       }),
     );

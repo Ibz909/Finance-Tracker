@@ -58,6 +58,14 @@ describe('MIGRATIONS', () => {
     });
   });
 
+  it('3 → 4 adds empty savings goal lists and keeps everything else', () => {
+    const v3 = { transactions: [], budgets: [], recurringSchedules: [{ id: 'r' }], settings: {} };
+    expect(migrate(v3, 3, 4)).toEqual({
+      ok: true,
+      data: { ...v3, savingsGoals: [], goalContributions: [] },
+    });
+  });
+
   it('2 → 3 leaves unrecognisable data alone for validation to reject', () => {
     expect(MIGRATIONS[2]?.('nope')).toBe('nope');
   });

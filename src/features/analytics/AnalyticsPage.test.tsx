@@ -110,7 +110,7 @@ describe('Analytics page', () => {
 });
 
 describe('Dashboard charts', () => {
-  it('shows live chart cards and keeps only savings goals as coming soon', () => {
+  it('shows live chart cards alongside the savings goals panel', () => {
     renderRoute('/', { repository: seeded(...data) });
 
     expect(region('Spending over time')).toHaveTextContent('Highest spending: November 2026');
@@ -119,6 +119,6 @@ describe('Dashboard charts', () => {
     expect(region('Spending by category')).toHaveTextContent(
       '£1,500.00 spent across 2 categories in November 2026.',
     );
-    expect(region('Savings goals')).toHaveTextContent('Coming soon');
+    expect(region('Savings goals')).toHaveTextContent('No savings goals yet');
   });
 });
