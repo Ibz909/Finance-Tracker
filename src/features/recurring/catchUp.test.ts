@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeSchedule, makeTransaction } from '../../test/fixtures';
-import { catchUpAll, catchUpSchedule, recurringTransactionId } from './catchUp';
+import { catchUpAll, catchUpSchedule, dayAfter, recurringTransactionId } from './catchUp';
 
 const NOW = '2026-11-15T12:00:00.000Z';
 const ctx = { today: '2026-11-15', now: NOW, existingIds: new Set<string>() };
@@ -132,5 +132,34 @@ describe('catchUpAll', () => {
       'rec-pay-2026-11-06',
     ]);
     expect(result.schedules.map((s) => s.nextDueDate)).toEqual(['2026-12-01', '2026-11-20']);
+  });
+});
+
+describe('across the UK clock changes', () => {
+  it('steps one calendar day at a time over the 23- and 25-hour days', () => {
+    expect(dayAfter('2026-03-28')).toBe('2026-03-29');
+    expect(dayAfter('2026-03-29')).toBe('2026-03-30');
+    expect(dayAfter('2026-10-24')).toBe('2026-10-25');
+    expect(dayAfter('2026-10-25')).toBe('2026-10-26');
+  });
+
+  it('adds weekly payments on the right days through the spring change', () => {
+    const schedule = makeSchedule({
+      frequency: 'weekly',
+      startDate: '2026-03-22',
+      nextDueDate: '2026-03-22',
+    });
+    const result = catchUpSchedule(schedule, {
+      today: '2026-04-06',
+      now: '2026-04-06T12:00:00.000Z',
+      existingIds: new Set<string>(),
+    });
+
+    expect(result.transactions.map((t) => t.date)).toEqual([
+      '2026-03-22',
+      '2026-03-29',
+      '2026-04-05',
+    ]);
+    expect(result.schedule.nextDueDate).toBe('2026-04-12');
   });
 });
