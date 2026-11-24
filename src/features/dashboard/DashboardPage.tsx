@@ -1,12 +1,13 @@
-import { FlaskConical, PiggyBank, Plus, Wallet } from 'lucide-react';
+import { FlaskConical, Plus, Wallet } from 'lucide-react';
 import { useMemo } from 'react';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { useAppData } from '../../hooks/useAppData';
+import { useAppData, useClock } from '../../hooks/useAppData';
 import { useDemoDataActions } from '../../hooks/useDemoDataActions';
 import { useReportingMonth } from '../../hooks/useReportingMonth';
 import { useToast } from '../../hooks/useToast';
 import { useTransactionDialog } from '../../hooks/useTransactionDialog';
+import { todayIsoDate } from '../../utils/dates';
 import {
   categoryBreakdown,
   DEFAULT_RANGE_MONTHS,
@@ -19,13 +20,14 @@ import {
   SpendingTrendCard,
 } from '../analytics/AnalyticsCharts';
 import { BudgetOverview } from './BudgetOverview';
-import { ComingSoonPanel } from './ComingSoonPanel';
 import { RecentTransactions } from './RecentTransactions';
+import { SavingsOverview } from './SavingsOverview';
 import { recentTransactions, summariseMonth } from './summary';
 import { SummaryCards } from './SummaryCards';
 
 export function DashboardPage() {
-  const { transactions, budgets } = useAppData();
+  const { transactions, budgets, savingsGoals, goalContributions } = useAppData();
+  const today = todayIsoDate(useClock()());
   const { month } = useReportingMonth();
   const { openAddTransaction } = useTransactionDialog();
   const { loadDemoData } = useDemoDataActions();
@@ -87,11 +89,7 @@ export function DashboardPage() {
           months={thisMonth}
           title="Spending by category"
         />
-        <ComingSoonPanel
-          title="Savings goals"
-          description="Follow progress towards the goals you set."
-          icon={PiggyBank}
-        />
+        <SavingsOverview goals={savingsGoals} contributions={goalContributions} today={today} />
       </div>
     </div>
   );

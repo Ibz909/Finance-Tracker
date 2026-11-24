@@ -5,6 +5,8 @@ interface ProgressBarProps {
   percent: number;
   label: string;
   tone: Tone;
+  /** What screen readers hear. Defaults to "N% used". */
+  valueText?: string;
 }
 
 const FILL: Record<Tone, string> = {
@@ -17,7 +19,7 @@ const FILL: Record<Tone, string> = {
  * Accessible progress bar. Screen readers hear the real figure through
  * aria-valuetext ("112% used"), even when the bar itself is full.
  */
-export function ProgressBar({ percent, label, tone }: ProgressBarProps) {
+export function ProgressBar({ percent, label, tone, valueText }: ProgressBarProps) {
   const clamped = Math.max(0, Math.min(percent, 100));
   return (
     <div
@@ -26,7 +28,7 @@ export function ProgressBar({ percent, label, tone }: ProgressBarProps) {
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={clamped}
-      aria-valuetext={`${String(percent)}% used`}
+      aria-valuetext={valueText ?? `${String(percent)}% used`}
       className="h-2.5 w-full overflow-hidden rounded-full bg-muted"
     >
       <div
