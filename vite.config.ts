@@ -10,8 +10,9 @@ export default defineConfig({
     // Only the stylesheet's raw text is needed, by the theme contrast test.
     css: { include: [/src\/styles\/index\.css/] },
     restoreMocks: true,
-    // A timezone behind UTC, so any accidental UTC date conversion shifts
-    // a date by a day and fails a test instead of passing on a UK machine.
-    env: { TZ: 'America/Los_Angeles' },
+    // UK time, matching the app's users: GMT in winter, BST (UTC+1) in
+    // summer. Tests that guard against UTC date bugs use summer dates,
+    // when local time and UTC differ (see src/utils/dates.test.ts).
+    env: { TZ: 'Europe/London' },
   },
 });

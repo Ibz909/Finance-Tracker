@@ -15,9 +15,10 @@ import {
 } from './dates';
 
 describe('test environment', () => {
-  it('runs in a timezone behind UTC so UTC-conversion bugs surface', () => {
-    // vite.config.ts sets TZ=America/Los_Angeles for tests.
-    expect(new Date(2026, 0, 15).getTimezoneOffset()).toBe(480);
+  it('runs in UK time: GMT in winter, BST (UTC+1) in summer', () => {
+    // vite.config.ts sets TZ=Europe/London for tests.
+    expect(new Date(2026, 0, 15).getTimezoneOffset()).toBe(0);
+    expect(new Date(2026, 6, 15).getTimezoneOffset()).toBe(-60);
   });
 });
 
@@ -59,11 +60,13 @@ describe('parseIsoDate', () => {
     ]);
   });
 
-  it('does not shift the day the way new Date("YYYY-MM-DD") does', () => {
-    // The pitfall this module exists to avoid: UTC midnight is the previous
-    // evening in Los Angeles.
-    expect(new Date('2026-03-01').getDate()).toBe(28);
-    expect(parseIsoDate('2026-03-01').getDate()).toBe(1);
+  it('reads the date as local time, unlike new Date("YYYY-MM-DD")', () => {
+    // The pitfall this module avoids: new Date() reads a bare date as UTC
+    // midnight. In BST that is 1am local time, and in any timezone behind
+    // UTC (the Americas) it is the previous evening, a different day.
+    expect(new Date('2026-07-01').getHours()).toBe(1);
+    const parsed = parseIsoDate('2026-07-01');
+    expect([parsed.getDate(), parsed.getHours()]).toEqual([1, 0]);
   });
 
   it('throws on invalid dates', () => {
@@ -73,11 +76,11 @@ describe('parseIsoDate', () => {
 
 describe('today and current month', () => {
   it('use the local calendar date, not the UTC one', () => {
-    // 11pm on 31 Dec in Los Angeles is already 1 Jan in UTC.
-    const lateNight = new Date(2026, 11, 31, 23, 0);
-    expect(lateNight.toISOString().slice(0, 10)).toBe('2027-01-01');
-    expect(todayIsoDate(lateNight)).toBe('2026-12-31');
-    expect(currentMonthKey(lateNight)).toBe('2026-12');
+    // 00:30 on 1 July in BST is still 30 June in UTC.
+    const justAfterMidnight = new Date(2026, 6, 1, 0, 30);
+    expect(justAfterMidnight.toISOString().slice(0, 10)).toBe('2026-06-30');
+    expect(todayIsoDate(justAfterMidnight)).toBe('2026-07-01');
+    expect(currentMonthKey(justAfterMidnight)).toBe('2026-07');
   });
 });
 
@@ -123,5 +126,40 @@ describe('display formatting', () => {
   it('formats dates and months in UK style', () => {
     expect(formatDisplayDate('2026-11-03')).toBe('3 Nov 2026');
     expect(formatMonthLabel('2026-11')).toBe('November 2026');
+  });
+});
+
+describe('British Summer Time', () => {
+  // UK clocks go forward at 1am on 29 March 2026 and back at 2am on 25 October.
+  // Days around the change are 23 or 25 hours long, which breaks code that
+  // adds 24 hours to move a day, or that reads dates in UTC.
+
+  it('parses the clock-change days to local midnight on the right date', () => {
+    for (const day of ['2026-03-29', '2026-10-25']) {
+      const date = parseIsoDate(day);
+      expect([date.getDate(), date.getHours()]).toEqual([Number(day.slice(8)), 0]);
+    }
+  });
+
+  it('keeps month bounds right in the months the clocks change', () => {
+    expect(getMonthBounds('2026-03')).toEqual({ start: '2026-03-01', end: '2026-03-31' });
+    expect(getMonthBounds('2026-10')).toEqual({ start: '2026-10-01', end: '2026-10-31' });
+  });
+
+  it('moves between GMT and BST months without skipping or repeating one', () => {
+    expect(shiftMonth('2026-03', 1)).toBe('2026-04');
+    expect(shiftMonth('2026-10', 1)).toBe('2026-11');
+    expect(shiftMonth('2026-04', -1)).toBe('2026-03');
+  });
+
+  it('shows summer dates as the local calendar day', () => {
+    expect(formatDisplayDate('2026-07-01')).toBe('1 Jul 2026');
+    expect(isDateInMonth('2026-07-01', '2026-07')).toBe(true);
+  });
+
+  it('gives today’s date just after midnight in summer, when UTC is still yesterday', () => {
+    const earlyMorning = new Date(2026, 3, 1, 0, 15); // 00:15 BST on 1 April
+    expect(todayIsoDate(earlyMorning)).toBe('2026-04-01');
+    expect(currentMonthKey(earlyMorning)).toBe('2026-04');
   });
 });
