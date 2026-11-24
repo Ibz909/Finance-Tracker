@@ -32,6 +32,29 @@ export function buildAddTransaction(
   return { ok: true, value: { type: 'transactionAdded', transaction } };
 }
 
+/** Turns validated import drafts into one action, with fresh IDs and timestamps. */
+export function buildImportTransactions(
+  drafts: readonly unknown[],
+  { newId, now }: { newId: () => string; now: string },
+): CommandResult<Extract<AppDataAction, { type: 'transactionsImported' }>> {
+  const transactions: Transaction[] = [];
+  for (const input of drafts) {
+    const draft = transactionDraftSchema.safeParse(input);
+    // Defence in depth: the import plan has already validated every row.
+    if (!draft.success) return { ok: false, fieldErrors: z.flattenError(draft.error).fieldErrors };
+    transactions.push(
+      transactionSchema.parse({
+        ...draft.data,
+        id: newId(),
+        createdAt: now,
+        updatedAt: now,
+        isDemo: false,
+      }),
+    );
+  }
+  return { ok: true, value: { type: 'transactionsImported', transactions } };
+}
+
 export function buildUpdateTransaction(
   id: string,
   input: unknown,

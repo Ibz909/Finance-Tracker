@@ -18,6 +18,8 @@ export type AppDataAction =
   | { type: 'transactionAdded'; transaction: Transaction }
   | { type: 'transactionUpdated'; id: string; changes: TransactionDraft; updatedAt: string }
   | { type: 'transactionDeleted'; id: string }
+  /** A whole CSV import at once, so it is saved (or fails to save) as one change. */
+  | { type: 'transactionsImported'; transactions: Transaction[] }
   | { type: 'budgetAdded'; budget: Budget }
   /** Only the limit can change; what a budget is for is fixed once created. */
   | { type: 'budgetUpdated'; id: string; limitPence: number; updatedAt: string }
@@ -80,6 +82,11 @@ export function appDataReducer(state: AppData, action: AppDataAction): AppData {
             : t,
         ),
       };
+    }
+
+    case 'transactionsImported': {
+      if (action.transactions.length === 0) return state;
+      return { ...state, transactions: [...state.transactions, ...action.transactions] };
     }
 
     case 'transactionDeleted': {

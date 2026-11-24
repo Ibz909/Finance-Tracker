@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildAddTransaction, buildUpdateTransaction } from './transactionCommands';
+import {
+  buildAddTransaction,
+  buildImportTransactions,
+  buildUpdateTransaction,
+} from './transactionCommands';
 
 const NOW = '2026-11-23T10:00:00.000Z';
 const validInput = {
@@ -72,5 +76,34 @@ describe('buildUpdateTransaction', () => {
     expect(
       buildUpdateTransaction('abc', { ...validInput, date: '2026-02-30' }, { now: NOW }),
     ).toMatchObject({ ok: false, fieldErrors: { date: ['Enter a valid date'] } });
+  });
+});
+
+describe('buildImportTransactions', () => {
+  it('creates one action with a fresh ID and shared timestamp per row', () => {
+    let n = 0;
+    const result = buildImportTransactions([validInput, { ...validInput, amountPence: 100 }], {
+      newId: () => `imported-${String(++n)}`,
+      now: NOW,
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      value: {
+        type: 'transactionsImported',
+        transactions: [
+          { id: 'imported-1', description: 'Train to Leeds', createdAt: NOW, isDemo: false },
+          { id: 'imported-2', amountPence: 100 },
+        ],
+      },
+    });
+  });
+
+  it('rejects the whole batch if any row is invalid', () => {
+    const result = buildImportTransactions([validInput, { ...validInput, amountPence: 0 }], {
+      newId: () => 'x',
+      now: NOW,
+    });
+    expect(result.ok).toBe(false);
   });
 });
