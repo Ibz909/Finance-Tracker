@@ -1,4 +1,5 @@
 import type { Budget } from '../models/budget';
+import type { RecurringSchedule } from '../models/recurring';
 import type { Transaction } from '../models/transaction';
 
 let counter = 0;
@@ -39,4 +40,24 @@ export function makeBudget(overrides: Partial<Budget> = {}): Budget {
   // An overall budget must not carry a category.
   if (budget.scope === 'overall' && !('categoryId' in overrides)) delete budget.categoryId;
   return budget;
+}
+
+/** A valid recurring schedule; defaults to £950 rent on the 1st of each month. */
+export function makeSchedule(overrides: Partial<RecurringSchedule> = {}): RecurringSchedule {
+  counter += 1;
+  return {
+    id: `schedule-${String(counter)}`,
+    type: 'expense',
+    amountPence: 95000,
+    categoryId: 'rent_housing',
+    description: 'Rent',
+    frequency: 'monthly',
+    startDate: '2026-09-01',
+    nextDueDate: '2026-09-01',
+    paused: false,
+    createdAt: '2026-09-01T12:00:00.000Z',
+    updatedAt: '2026-09-01T12:00:00.000Z',
+    isDemo: false,
+    ...overrides,
+  };
 }

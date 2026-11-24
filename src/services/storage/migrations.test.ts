@@ -44,4 +44,21 @@ describe('MIGRATIONS', () => {
   it('1 → 2 leaves unrecognisable data alone for validation to reject', () => {
     expect(MIGRATIONS[1]?.(['not', 'an', 'object'])).toEqual(['not', 'an', 'object']);
   });
+
+  it('2 → 3 adds an empty recurring schedules list and keeps everything else', () => {
+    const v2 = { transactions: [{ id: 'a' }], budgets: [{ id: 'b' }], settings: {}, extra: 1 };
+    expect(migrate(v2, 2, 3)).toEqual({ ok: true, data: { ...v2, recurringSchedules: [] } });
+  });
+
+  it('upgrades version 1 data all the way to version 3', () => {
+    const v1 = { transactions: [], settings: {} };
+    expect(migrate(v1, 1, 3)).toEqual({
+      ok: true,
+      data: { ...v1, budgets: [], recurringSchedules: [] },
+    });
+  });
+
+  it('2 → 3 leaves unrecognisable data alone for validation to reject', () => {
+    expect(MIGRATIONS[2]?.('nope')).toBe('nope');
+  });
 });

@@ -2,6 +2,8 @@ import { use } from 'react';
 import {
   AppDataDispatchContext,
   AppDataStateContext,
+  ClockContext,
+  RecurringCatchUpContext,
   StorageStatusContext,
 } from '../context/appDataContext';
 
@@ -22,4 +24,13 @@ export function useAppDispatch() {
 
 export function useStorageStatus() {
   return required(use(StorageStatusContext), 'useStorageStatus');
+}
+
+/** The current time, from the provider's (injectable) clock. */
+export function useClock() {
+  return required(use(ClockContext), 'useClock');
+}
+
+export function useRecurringCatchUp() {
+  return required(use(RecurringCatchUpContext), 'useRecurringCatchUp');
 }

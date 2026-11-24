@@ -4,6 +4,7 @@ import {
   ChartPie,
   LayoutDashboard,
   PiggyBank,
+  Repeat,
   Settings,
   Target,
 } from 'lucide-react';
@@ -21,6 +22,7 @@ export interface NavItem {
 export const NAV_ITEMS: readonly NavItem[] = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
+  { path: '/recurring', label: 'Recurring', icon: Repeat },
   { path: '/budgets', label: 'Budgets', icon: Target },
   { path: '/analytics', label: 'Analytics', icon: ChartPie },
   { path: '/savings', label: 'Savings Goals', icon: PiggyBank },

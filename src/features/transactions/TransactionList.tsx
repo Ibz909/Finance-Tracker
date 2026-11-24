@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Repeat, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
 import { getCategory } from '../../constants/categories';
@@ -36,7 +36,8 @@ function TransactionRow({
   onEdit,
   onDelete,
 }: { transaction: Transaction } & Omit<TransactionListProps, 'transactions'>) {
-  const { description, categoryId, date, type, amountPence, isDemo } = transaction;
+  const { description, categoryId, date, type, amountPence, isDemo, recurringScheduleId } =
+    transaction;
   const isIncome = type === 'income';
 
   return (
@@ -46,6 +47,12 @@ function TransactionRow({
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-2 font-medium">
           <span className="truncate">{description}</span>
+          {recurringScheduleId && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+              <Repeat aria-hidden="true" className="size-3" />
+              Recurring
+            </span>
+          )}
           {isDemo && (
             <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
               Demo
