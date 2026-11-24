@@ -1,11 +1,15 @@
-import { Plus, ReceiptText, RotateCcw, SearchX } from 'lucide-react';
+import { Download, Plus, ReceiptText, RotateCcw, SearchX } from 'lucide-react';
 import { useDeferredValue, useMemo, useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { useAppData } from '../../hooks/useAppData';
+import { useAppData, useClock } from '../../hooks/useAppData';
+import { useToast } from '../../hooks/useToast';
 import { useTransactionDialog } from '../../hooks/useTransactionDialog';
 import { useTransactionFilters } from '../../hooks/useTransactionFilters';
 import type { Transaction } from '../../models/transaction';
+import { todayIsoDate } from '../../utils/dates';
+import { downloadTextFile, exportFileName } from '../importExport/download';
+import { transactionsToCsv } from '../importExport/transactionCsv';
 import { DeleteTransactionDialog } from './DeleteTransactionDialog';
 import { countActiveFilters, filterTransactions, sortTransactions } from './transactionFilters';
 import { TransactionFiltersBar } from './TransactionFiltersBar';
@@ -16,6 +20,8 @@ export function TransactionsPage() {
   const { openAddTransaction, openEditTransaction } = useTransactionDialog();
   const { filters, updateFilters, resetFilters } = useTransactionFilters();
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
+  const { showToast } = useToast();
+  const clock = useClock();
 
   // The search box updates immediately; the list catches up a moment later,
   // so typing stays smooth even with a long history.
@@ -61,15 +67,31 @@ export function TransactionsPage() {
         aria-labelledby="transactions-heading"
         className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm"
       >
-        <div className="flex items-baseline justify-between gap-4 border-b border-border px-4 py-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border px-4 py-3 sm:px-6">
           <h2 id="transactions-heading" className="text-base font-semibold">
             All transactions
           </h2>
-          <p aria-live="polite" className="text-sm text-muted-foreground">
-            {activeCount > 0
-              ? `Showing ${String(visible.length)} of ${plural(total)}`
-              : plural(total)}
-          </p>
+          <div className="flex items-center gap-3">
+            <p aria-live="polite" className="text-sm text-muted-foreground">
+              {activeCount > 0
+                ? `Showing ${String(visible.length)} of ${plural(total)}`
+                : plural(total)}
+            </p>
+            {/* Exports exactly what is shown, so filters double as an export selection. */}
+            <Button
+              variant="ghost"
+              className="px-3"
+              disabled={visible.length === 0}
+              aria-label={`Export ${plural(visible.length)} as CSV`}
+              onClick={() => {
+                downloadTextFile(exportFileName(todayIsoDate(clock())), transactionsToCsv(visible));
+                showToast(`Exported ${plural(visible.length)}`);
+              }}
+            >
+              <Download aria-hidden="true" className="size-4" />
+              Export
+            </Button>
+          </div>
         </div>
 
         <TransactionFiltersBar
