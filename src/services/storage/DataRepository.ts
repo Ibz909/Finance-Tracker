@@ -10,6 +10,11 @@ import type { AppData } from '../../models/appData';
 export interface DataRepository {
   load(): LoadResult;
   save(data: AppData): SaveResult;
+  /**
+   * Deletes copies of damaged data kept during recovery. Part of a full
+   * reset: someone deleting all their data expects nothing left behind.
+   */
+  clearBackups(): SaveResult;
 }
 
 export type LoadResult =

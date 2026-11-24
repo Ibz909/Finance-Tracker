@@ -5,7 +5,7 @@ import type { DataRepository, LoadResult } from '../../services/storage/DataRepo
 import { renderRoute } from '../../test/renderRoute';
 
 function repositoryReturning(load: LoadResult): DataRepository {
-  return { load: () => load, save: () => ({ ok: true }) };
+  return { load: () => load, save: () => ({ ok: true }), clearBackups: () => ({ ok: true }) };
 }
 
 describe('StorageNotice', () => {

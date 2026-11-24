@@ -92,13 +92,22 @@ export function AppDataProvider({
     setLoadProblemDismissed(true);
   }, []);
 
+  const resetAllData = useCallback(() => {
+    dispatch({ type: 'dataReset' });
+    const cleared = repository.clearBackups();
+    if (!cleared.ok) setSaveError(cleared.error);
+    // Messages about the old data no longer apply.
+    setLoadProblemDismissed(true);
+    setCatchUpDismissed(true);
+  }, [dispatch, repository]);
+
   const storageStatus = useMemo<StorageStatus>(() => {
     const load: StorageStatus['load'] =
       initialLoad.status === 'recovered' && !loadProblemDismissed
         ? { status: 'recovered', problem: initialLoad.problem, backupKey: initialLoad.backupKey }
         : { status: initialLoad.status === 'recovered' ? 'ok' : initialLoad.status };
-    return { load, saveError, dismissLoadProblem };
-  }, [initialLoad, loadProblemDismissed, saveError, dismissLoadProblem]);
+    return { load, saveError, dismissLoadProblem, resetAllData };
+  }, [initialLoad, loadProblemDismissed, saveError, dismissLoadProblem, resetAllData]);
 
   return (
     <ClockContext value={clock}>

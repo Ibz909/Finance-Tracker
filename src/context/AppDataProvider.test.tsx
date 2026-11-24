@@ -115,6 +115,7 @@ describe('AppDataProvider', () => {
         if (failNext) return { ok: false, error: 'Browser storage is full.' };
         return memory.save(data);
       },
+      clearBackups: () => memory.clearBackups(),
     };
     const { result } = renderData(flaky);
 
@@ -140,6 +141,7 @@ describe('AppDataProvider', () => {
         backupKey: 'backup-1',
       }),
       save: () => ({ ok: true }),
+      clearBackups: () => ({ ok: true }),
     };
     const { result } = renderData(repository);
 

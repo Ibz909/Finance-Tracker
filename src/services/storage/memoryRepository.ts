@@ -8,10 +8,18 @@ import type { DataRepository } from './DataRepository';
  */
 export function createMemoryRepository(initial?: AppData) {
   let saved: AppData | undefined = initial ? structuredClone(initial) : undefined;
+  let backupsCleared = 0;
 
-  const repository: DataRepository & { readonly saved: AppData | undefined } = {
+  const repository: DataRepository & {
+    readonly saved: AppData | undefined;
+    /** How many times clearBackups was called. */
+    readonly backupsCleared: number;
+  } = {
     get saved() {
       return saved;
+    },
+    get backupsCleared() {
+      return backupsCleared;
     },
     load() {
       return saved
@@ -20,6 +28,10 @@ export function createMemoryRepository(initial?: AppData) {
     },
     save(data) {
       saved = structuredClone(data);
+      return { ok: true };
+    },
+    clearBackups() {
+      backupsCleared += 1;
       return { ok: true };
     },
   };

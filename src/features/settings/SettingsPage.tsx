@@ -1,8 +1,7 @@
-import { Settings } from 'lucide-react';
-import { PlaceholderPage } from '../../components/ui/PlaceholderPage';
-import { AppearanceSettings } from './AppearanceSettings';
 import { DataSettings } from '../importExport/DataSettings';
+import { AppearanceSettings } from './AppearanceSettings';
 import { DemoDataSettings } from './DemoDataSettings';
+import { ResetDataSettings } from './ResetDataSettings';
 
 export function SettingsPage() {
   return (
@@ -10,11 +9,7 @@ export function SettingsPage() {
       <AppearanceSettings />
       <DataSettings />
       <DemoDataSettings />
-      <PlaceholderPage
-        icon={Settings}
-        heading="More settings"
-        description="Options to reset your data will live here."
-      />
+      <ResetDataSettings />
     </div>
   );
 }
