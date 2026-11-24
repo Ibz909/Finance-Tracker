@@ -24,6 +24,18 @@ function demoRepository() {
   });
 }
 
+/**
+ * One h1, and no skipped levels (an h2 straight to an h4, say), so screen
+ * reader users can navigate by heading. axe treats this as best practice,
+ * outside its WCAG rule set, so it is checked here.
+ */
+function expectSoundHeadingOutline() {
+  const levels = screen.getAllByRole('heading').map((h) => Number(h.tagName.slice(1)));
+  expect(levels.filter((level) => level === 1)).toHaveLength(1);
+  const skips = levels.filter((level, i) => i > 0 && level - (levels[i - 1] ?? 0) > 1);
+  expect(skips, `Heading levels in order: ${levels.join(', ')}`).toEqual([]);
+}
+
 const PAGES = [
   '/',
   '/transactions',
@@ -43,6 +55,7 @@ describe('Accessibility (axe-core, WCAG 2.2 A/AA)', () => {
     it.each(PAGES)('%s', async (path) => {
       renderRoute(path, { repository: repository() });
       await expectNoAccessibilityViolations();
+      expectSoundHeadingOutline();
     });
   });
 

@@ -44,9 +44,10 @@ export function GoalCard({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 id={titleId} className="font-semibold break-words">
+            {/* h2: goal cards sit directly under the page's h1. */}
+            <h2 id={titleId} className="text-base font-semibold break-words">
               {goal.name}
-            </h3>
+            </h2>
             {goal.isDemo && (
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                 Demo
