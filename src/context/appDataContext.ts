@@ -21,6 +21,11 @@ export interface StorageStatus {
   /** Set when the most recent save failed; cleared by the next success. */
   saveError: string | null;
   dismissLoadProblem: () => void;
+  /**
+   * Deletes all financial data and any recovery backups. The theme is a
+   * preference, not data, so it is kept.
+   */
+  resetAllData: () => void;
 }
 
 export const StorageStatusContext = createContext<StorageStatus | null>(null);
