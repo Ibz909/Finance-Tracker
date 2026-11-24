@@ -109,7 +109,7 @@ export function GoalCard({
       <div className="flex flex-wrap gap-2">
         <Button
           variant="secondary"
-          className="flex-1"
+          className="flex-1 px-3 whitespace-nowrap"
           aria-label={`Add money to ${goal.name}`}
           onClick={() => {
             onContribute(goal, 'deposit');
@@ -120,7 +120,7 @@ export function GoalCard({
         </Button>
         <Button
           variant="secondary"
-          className="flex-1"
+          className="flex-1 px-3 whitespace-nowrap"
           disabled={savedPence <= 0}
           aria-label={`Withdraw from ${goal.name}`}
           onClick={() => {
