@@ -109,6 +109,23 @@ export function createLocalStorageRepository({
       }
       return write(storage, data);
     },
+
+    clearBackups() {
+      const storage = tryGetStorage();
+      if (!storage) return { ok: false, error: 'Browser storage is unavailable.' };
+      try {
+        // Collect first: removing while iterating by index would skip keys.
+        const backupKeys: string[] = [];
+        for (let i = 0; i < storage.length; i++) {
+          const name = storage.key(i);
+          if (name?.startsWith(STORAGE_KEYS.dataBackupPrefix)) backupKeys.push(name);
+        }
+        for (const name of backupKeys) storage.removeItem(name);
+        return { ok: true };
+      } catch {
+        return { ok: false, error: 'Old backup copies could not be deleted from browser storage.' };
+      }
+    },
   };
 }
 

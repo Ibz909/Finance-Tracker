@@ -150,3 +150,28 @@ describe('localStorageRepository', () => {
     });
   });
 });
+
+describe('clearBackups', () => {
+  it('removes every backup copy and nothing else', () => {
+    localStorage.setItem(KEY, 'data');
+    localStorage.setItem(STORAGE_KEYS.theme, 'dark');
+    localStorage.setItem(`${STORAGE_KEYS.dataBackupPrefix}2026-01-01T00:00:00.000Z`, 'old');
+    localStorage.setItem(`${STORAGE_KEYS.dataBackupPrefix}2026-02-01T00:00:00.000Z`, 'older');
+    localStorage.setItem('another-site-key', 'keep');
+
+    expect(repository().clearBackups()).toEqual({ ok: true });
+
+    expect(Object.keys(localStorage).sort()).toEqual(
+      ['another-site-key', KEY, STORAGE_KEYS.theme].sort(),
+    );
+  });
+
+  it('reports when storage is unavailable', () => {
+    const blocked = createLocalStorageRepository({
+      getStorage: () => {
+        throw new DOMException('Blocked', 'SecurityError');
+      },
+    });
+    expect(blocked.clearBackups()).toMatchObject({ ok: false });
+  });
+});
