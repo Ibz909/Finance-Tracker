@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router';
+import { Outlet, useLocation, useNavigation } from 'react-router';
 import { APP_NAME, getPageTitle } from '../../constants/navigation';
 import { DemoDataBanner } from './DemoDataBanner';
 import { MobileNav } from './MobileNav';
@@ -12,6 +12,8 @@ export function AppShell() {
   const { pathname } = useLocation();
   const title = getPageTitle(pathname);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // True while the next page's code is downloading; the current page stays put.
+  const isLoadingPage = useNavigation().state === 'loading';
   // Stable identity so MobileNav's effects don't re-subscribe every render.
   const closeMenu = useCallback(() => {
     setIsMenuOpen(false);
@@ -41,8 +43,17 @@ export function AppShell() {
         <main
           id="main-content"
           tabIndex={-1}
-          className="flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8"
+          aria-busy={isLoadingPage}
+          className="relative flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8"
         >
+          {isLoadingPage && (
+            // Visual only: aria-busy tells assistive technology the page is changing.
+            <div
+              aria-hidden="true"
+              data-testid="page-loading-bar"
+              className="absolute inset-x-0 top-0 h-0.5 animate-pulse bg-accent"
+            />
+          )}
           <div className="mx-auto max-w-7xl">
             <StorageNotice />
             <DemoDataBanner />
