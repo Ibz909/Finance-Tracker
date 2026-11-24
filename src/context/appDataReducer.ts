@@ -3,6 +3,7 @@ import type { Budget } from '../models/budget';
 import { budgetKey } from '../models/budget';
 import { createEmptyAppData } from '../models/appData';
 import type { RecurringDraft, RecurringSchedule } from '../models/recurring';
+import type { GoalContribution, GoalDraft, SavingsGoal } from '../models/savings';
 import type { Transaction, TransactionDraft } from '../models/transaction';
 import { catchUpAll } from '../features/recurring/catchUp';
 import { firstOccurrenceOnOrAfter } from '../features/recurring/schedule';
@@ -41,12 +42,24 @@ export type AppDataAction =
   | { type: 'recurringScheduleDeleted'; id: string }
   /** Adds every payment that has fallen due. Runs when the app opens. */
   | { type: 'recurringCaughtUp'; today: IsoDate; now: string }
+  | { type: 'goalAdded'; goal: SavingsGoal }
+  | { type: 'goalUpdated'; id: string; changes: GoalDraft; updatedAt: string }
+  /** Also removes the goal's contributions: they mean nothing without it. */
+  | { type: 'goalDeleted'; id: string }
+  | { type: 'contributionAdded'; contribution: GoalContribution }
+  | { type: 'contributionDeleted'; id: string }
   /**
    * Replaces any existing demo records with these. Real records are never
    * touched, and a demo budget is skipped if a real budget already covers
    * the same category (or overall), so the user's own limit always wins.
    */
-  | { type: 'demoDataLoaded'; transactions: Transaction[]; budgets: Budget[] }
+  | {
+      type: 'demoDataLoaded';
+      transactions: Transaction[];
+      budgets: Budget[];
+      goals?: SavingsGoal[];
+      contributions?: GoalContribution[];
+    }
   /** Removes every record flagged isDemo, and nothing else. */
   | { type: 'demoDataCleared' }
   | { type: 'dataReset' };
@@ -138,6 +151,45 @@ export function appDataReducer(state: AppData, action: AppDataAction): AppData {
     case 'recurringCaughtUp':
       return catchUp(state, action);
 
+    case 'goalAdded':
+      return { ...state, savingsGoals: [...state.savingsGoals, action.goal] };
+
+    case 'goalUpdated': {
+      if (!state.savingsGoals.some((g) => g.id === action.id)) return state;
+      return {
+        ...state,
+        savingsGoals: state.savingsGoals.map((g) => {
+          if (g.id !== action.id) return g;
+          const next: SavingsGoal = { ...g, ...action.changes, updatedAt: action.updatedAt };
+          // Clearing the date in the form must remove it, not keep the old one.
+          if (action.changes.targetDate === undefined) delete next.targetDate;
+          return next;
+        }),
+      };
+    }
+
+    case 'goalDeleted': {
+      const savingsGoals = state.savingsGoals.filter((g) => g.id !== action.id);
+      if (savingsGoals.length === state.savingsGoals.length) return state;
+      return {
+        ...state,
+        savingsGoals,
+        goalContributions: state.goalContributions.filter((c) => c.goalId !== action.id),
+      };
+    }
+
+    case 'contributionAdded':
+      // Never attach money to a goal that doesn't exist.
+      if (!state.savingsGoals.some((g) => g.id === action.contribution.goalId)) return state;
+      return { ...state, goalContributions: [...state.goalContributions, action.contribution] };
+
+    case 'contributionDeleted': {
+      const goalContributions = state.goalContributions.filter((c) => c.id !== action.id);
+      return goalContributions.length === state.goalContributions.length
+        ? state
+        : { ...state, goalContributions };
+    }
+
     case 'demoDataLoaded': {
       const realBudgets = state.budgets.filter((b) => !b.isDemo);
       const taken = new Set(realBudgets.map(budgetKey));
@@ -145,6 +197,11 @@ export function appDataReducer(state: AppData, action: AppDataAction): AppData {
         ...state,
         transactions: [...state.transactions.filter((t) => !t.isDemo), ...action.transactions],
         budgets: [...realBudgets, ...action.budgets.filter((b) => !taken.has(budgetKey(b)))],
+        savingsGoals: [...state.savingsGoals.filter((g) => !g.isDemo), ...(action.goals ?? [])],
+        goalContributions: [
+          ...state.goalContributions.filter((c) => !c.isDemo),
+          ...(action.contributions ?? []),
+        ],
       };
     }
 
@@ -152,11 +209,24 @@ export function appDataReducer(state: AppData, action: AppDataAction): AppData {
       const transactions = state.transactions.filter((t) => !t.isDemo);
       const budgets = state.budgets.filter((b) => !b.isDemo);
       const recurringSchedules = state.recurringSchedules.filter((s) => !s.isDemo);
+      const savingsGoals = state.savingsGoals.filter((g) => !g.isDemo);
+      const goalContributions = state.goalContributions.filter((c) => !c.isDemo);
       const unchanged =
         transactions.length === state.transactions.length &&
         budgets.length === state.budgets.length &&
-        recurringSchedules.length === state.recurringSchedules.length;
-      return unchanged ? state : { ...state, transactions, budgets, recurringSchedules };
+        recurringSchedules.length === state.recurringSchedules.length &&
+        savingsGoals.length === state.savingsGoals.length &&
+        goalContributions.length === state.goalContributions.length;
+      return unchanged
+        ? state
+        : {
+            ...state,
+            transactions,
+            budgets,
+            recurringSchedules,
+            savingsGoals,
+            goalContributions,
+          };
     }
 
     case 'dataReset':
