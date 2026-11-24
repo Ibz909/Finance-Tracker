@@ -4,11 +4,12 @@ import { createEmptyAppData } from '../../models/appData';
 import { createMemoryRepository } from '../../services/storage/memoryRepository';
 import { makeTransaction } from '../../test/fixtures';
 import { renderRoute } from '../../test/renderRoute';
-import { generateDemoBudgets, generateDemoTransactions } from './demoData';
+import { generateDemoBudgets, generateDemoGoals, generateDemoTransactions } from './demoData';
 
 const NOW = new Date(2026, 10, 15, 12, 0);
 const DEMO_COUNT = generateDemoTransactions(NOW).length;
 const DEMO_BUDGET_COUNT = generateDemoBudgets(NOW).length;
+const DEMO_GOAL_COUNT = generateDemoGoals(NOW).goals.length;
 
 const realTransaction = makeTransaction({
   id: 'real-1',
@@ -47,9 +48,10 @@ describe('Loading demo data', () => {
     expect(saved).toContainEqual(realTransaction);
     expect(saved.filter((t) => t.isDemo)).toHaveLength(DEMO_COUNT);
     expect(demoSection()).toHaveTextContent(
-      `${String(DEMO_COUNT)} demo transactions and ${String(DEMO_BUDGET_COUNT)} demo budgets loaded.`,
+      `${String(DEMO_COUNT)} demo transactions, ${String(DEMO_BUDGET_COUNT)} demo budgets and ${String(DEMO_GOAL_COUNT)} demo savings goals loaded.`,
     );
     expect(repository.load().data.budgets).toHaveLength(DEMO_BUDGET_COUNT);
+    expect(repository.load().data.savingsGoals).toHaveLength(DEMO_GOAL_COUNT);
     expect(screen.getByRole('status', { name: 'Notifications' })).toHaveTextContent(
       'Demo data loaded',
     );
@@ -104,7 +106,7 @@ describe('Clearing demo data', () => {
 
     const confirm = screen.getByRole('dialog', { name: 'Clear demo data?' });
     expect(confirm).toHaveAccessibleDescription(
-      `This removes ${String(DEMO_COUNT)} demo transactions and ${String(DEMO_BUDGET_COUNT)} demo budgets. Your own transactions and budgets are not affected.`,
+      `This removes ${String(DEMO_COUNT)} demo transactions, ${String(DEMO_BUDGET_COUNT)} demo budgets and ${String(DEMO_GOAL_COUNT)} demo savings goals. Your own data is not affected.`,
     );
     await user.click(within(confirm).getByRole('button', { name: 'Cancel' }));
 

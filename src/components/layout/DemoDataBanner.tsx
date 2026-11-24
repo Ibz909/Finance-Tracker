@@ -8,9 +8,12 @@ import { useAppData } from '../../hooks/useAppData';
  * section explains it in full.
  */
 export function DemoDataBanner() {
-  const { transactions, budgets } = useAppData();
+  const { transactions, budgets, savingsGoals } = useAppData();
   const { pathname } = useLocation();
-  const hasDemoData = transactions.some((t) => t.isDemo) || budgets.some((b) => b.isDemo);
+  const hasDemoData =
+    transactions.some((t) => t.isDemo) ||
+    budgets.some((b) => b.isDemo) ||
+    savingsGoals.some((g) => g.isDemo);
 
   if (!hasDemoData || pathname === '/settings') return null;
 

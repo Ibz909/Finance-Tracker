@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { budgetKey, budgetSchema } from '../../models/budget';
+import { goalContributionSchema, savingsGoalSchema } from '../../models/savings';
 import { transactionSchema } from '../../models/transaction';
 import { getMonthBudgets } from '../budgets/budgetProgress';
+import { savedPence } from '../savings/goalProgress';
 import {
   DEMO_ID_PREFIX,
   DEMO_MONTHS,
   generateDemoBudgets,
+  generateDemoGoals,
   generateDemoTransactions,
 } from './demoData';
 
@@ -103,5 +106,34 @@ describe('generateDemoBudgets', () => {
     const { categories } = getMonthBudgets(budgets, demo, '2026-10');
     const statuses = new Set(categories.map((p) => p.status));
     expect(statuses).toEqual(new Set(['normal', 'warning', 'exceeded']));
+  });
+});
+
+describe('generateDemoGoals', () => {
+  const { goals, contributions } = generateDemoGoals(NOW);
+
+  it('produces valid, flagged goals and deposits that belong to them', () => {
+    const ids = new Set(goals.map((g) => g.id));
+    for (const goal of goals) {
+      expect(savingsGoalSchema.safeParse(goal).success).toBe(true);
+      expect(goal.isDemo).toBe(true);
+    }
+    for (const c of contributions) {
+      expect(goalContributionSchema.safeParse(c).success).toBe(true);
+      expect(c.isDemo).toBe(true);
+      expect(ids.has(c.goalId)).toBe(true);
+      expect(c.date <= '2026-11-15').toBe(true);
+    }
+  });
+
+  it('shows one undated goal and one with a future target date', () => {
+    expect(goals.map((g) => g.targetDate)).toEqual([undefined, '2027-07-31']);
+    // 6 × £250 into the emergency fund, 4 × £150 into the holiday.
+    expect(savedPence(contributions, 'demo-goal-emergency')).toBe(150000);
+    expect(savedPence(contributions, 'demo-goal-holiday')).toBe(60000);
+  });
+
+  it('is deterministic', () => {
+    expect(generateDemoGoals(NOW)).toEqual(generateDemoGoals(NOW));
   });
 });

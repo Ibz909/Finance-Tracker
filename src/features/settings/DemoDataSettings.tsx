@@ -7,19 +7,24 @@ import { useDemoDataActions } from '../../hooks/useDemoDataActions';
 import { useToast } from '../../hooks/useToast';
 
 export function DemoDataSettings() {
-  const { transactions, budgets } = useAppData();
+  const { transactions, budgets, savingsGoals } = useAppData();
   const { loadDemoData, clearDemoData } = useDemoDataActions();
   const { showToast } = useToast();
   const [confirmingClear, setConfirmingClear] = useState(false);
 
-  const demoTransactions = transactions.filter((t) => t.isDemo).length;
-  const demoBudgets = budgets.filter((b) => b.isDemo).length;
-  const demoCount = demoTransactions + demoBudgets;
-  const count = (n: number, noun: string) => `${String(n)} demo ${noun}${n === 1 ? '' : 's'}`;
+  const parts = [
+    { n: transactions.filter((t) => t.isDemo).length, noun: 'transaction' },
+    { n: budgets.filter((b) => b.isDemo).length, noun: 'budget' },
+    { n: savingsGoals.filter((g) => g.isDemo).length, noun: 'savings goal' },
+  ]
+    .filter(({ n }) => n > 0)
+    .map(({ n, noun }) => `${String(n)} demo ${noun}${n === 1 ? '' : 's'}`);
+  const demoCount = parts.length;
+  // "a", "a and b", "a, b and c"
   const summary =
-    demoBudgets > 0
-      ? `${count(demoTransactions, 'transaction')} and ${count(demoBudgets, 'budget')}`
-      : count(demoTransactions, 'transaction');
+    parts.length > 1
+      ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1) ?? ''}`
+      : (parts[0] ?? '');
 
   return (
     <section
@@ -34,8 +39,9 @@ export function DemoDataSettings() {
             Demo data
           </h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Load about six months of fictional transactions and some example budgets to explore the
-            app. Demo records are labelled “Demo”, and clearing them never touches your own data.
+            Load about six months of fictional transactions, example budgets and savings goals to
+            explore the app. Demo records are labelled “Demo”, and clearing them never touches your
+            own data.
           </p>
           <p className="mt-3 text-sm font-medium">
             {demoCount > 0 ? `${summary} loaded.` : 'No demo data loaded.'}
@@ -68,7 +74,7 @@ export function DemoDataSettings() {
       <ConfirmDialog
         open={confirmingClear}
         title="Clear demo data?"
-        description={`This removes ${summary}. Your own transactions and budgets are not affected.`}
+        description={`This removes ${summary}. Your own data is not affected.`}
         confirmLabel="Clear demo data"
         onCancel={() => {
           setConfirmingClear(false);
