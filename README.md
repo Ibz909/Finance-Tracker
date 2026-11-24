@@ -2,49 +2,51 @@
 
 [![CI](https://github.com/Ibz909/Finance-Tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/Ibz909/Finance-Tracker/actions/workflows/ci.yml)
 
-A personal finance tracker for recording income and spending in GBP and seeing your monthly cash flow at a glance. Built with React, TypeScript and Tailwind CSS. **Everything stays in your browser:** there is no server, no account and no tracking.
+A personal finance tracker for recording income and spending in GBP, setting budgets, saving towards goals and seeing where your money goes. Built with React, TypeScript and Tailwind CSS.
 
-> **Status:** Phases 1 (the working foundation) and 2 (budgets and analytics) are complete. Recurring transactions, savings goals and CSV import/export come next; see the [roadmap](#roadmap).
+**Everything stays in your browser:** there is no server, no account and no tracking.
+
+![Dashboard in the light theme, showing monthly income, expenses, net cash flow, savings rate and recent transactions](docs/screenshots/dashboard-light.jpg)
+
+<p>
+  <img src="docs/screenshots/analytics-dark.jpg" alt="Analytics page in the dark theme, with an income versus expenses bar chart, a spending trend line and a category ranking" width="64%">
+  <img src="docs/screenshots/budgets-mobile.jpg" alt="Budgets page on a phone, showing an overall budget nearing its limit and a groceries budget on track" width="30%">
+</p>
+
+<sub>Screenshots show the app's built-in fictional demo data.</sub>
 
 ## Features
 
-- **Transactions:** add, edit and delete income and expenses, with a description, category, date and optional notes. Every field is validated, with clear messages linked to the field that needs fixing.
-- **Monthly dashboard:** income, expenses, net cash flow and savings rate for any month, plus that month's recent transactions. The figures update the moment your data changes.
-- **Reporting month picker:** step backwards and forwards through months, or jump back to the current one.
-- **Budgets:** set one overall monthly limit and one per expense category. Each budget shows what's spent and left, with a status in words: _On track_, _Nearing limit_ (75% or more) or _Over budget_. The dashboard shows an overview for the selected month.
-- **Analytics:** income vs expenses by month, a spending trend, and a category breakdown with a ranked list. Every chart has a written summary and an optional data table with the exact figures.
-- **Date ranges:** this month, last month, or the last 3, 6 or 12 months. The range is kept in the URL, so it survives a refresh and the Back button works.
-- **Search, filters and sorting:** find transactions by description, type, category and date range, and sort by date or amount. Filters are kept in the URL too, and the page says how many results match.
-- **18 categories** (12 expense, 6 income), each with its own icon and colour.
-- **Light, dark and system themes:** your choice is remembered, and the page never flashes the wrong theme on load.
-- **Demo data:** one click loads six months of realistic, clearly labelled fictional transactions. Clearing it removes only demo records, never your own.
-- **Safe local storage:** data survives refreshes. If stored data is ever damaged, the app keeps what it can, backs up the original before changing anything, and tells you what happened.
-- **Responsive and accessible:**
-  - a mobile navigation drawer and phone-friendly layouts
-  - full keyboard support with visible focus
-  - accessible dialogs and labelled form errors
-  - status shown in words, not just colour
-  - respect for "reduce motion"
+- **Transactions:** add, edit and delete income and expenses, then search, filter by type, category and date, and sort. Filters are kept in the URL, so a view can be bookmarked.
+- **Dashboard:** income, expenses, net cash flow and savings rate for any month, with recent transactions, budget progress, savings goals and charts.
+- **Budgets:** one overall monthly limit and one per spending category, each shown as _On track_, _Nearing limit_ or _Over budget_.
+- **Analytics:** income vs expenses, a spending trend and a category breakdown for this month, last month, or the last 3, 6 or 12 months. Every chart has a written summary and a table of the exact figures.
+- **Recurring transactions:** set up salary, rent or subscriptions once. Each payment is added on its due date, including any that fell due while the app was closed. Schedules can be paused, resumed and edited.
+- **Savings goals:** record deposits and withdrawals towards a target, and see how much to save each month to reach it by a date. Saving isn't counted as spending.
+- **CSV import and export:** export transactions to open in a spreadsheet or keep as a backup. Imports are checked row by row and previewed before anything is saved, with duplicates skipped.
+- **Themes:** light, dark or follow your device, with no flash of the wrong theme on load.
+- **Demo data:** one click loads six months of clearly labelled fictional data. Clearing it never touches your own records.
+- **Safe reset:** delete everything after typing a confirmation word, with an option to export first.
+- **Accessible and responsive:** designed to meet WCAG 2.2 AA, with full keyboard support. Works on screens from 320px wide.
 
 ## Tech stack
 
-| Area       | Choice                         | Why                                                                                                      |
-| ---------- | ------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| UI         | React 19 + TypeScript (strict) | Function components and hooks; strict types catch mistakes before they run.                              |
-| Build      | Vite 8                         | Fast dev server and builds; Vitest shares its configuration.                                             |
-| Styling    | Tailwind CSS v4                | CSS-first `@theme` tokens; light and dark themes swap one set of CSS variables.                          |
-| Routing    | React Router 8                 | One layout route; each page renders inside it.                                                           |
-| Forms      | React Hook Form                | Minimal re-renders, and focuses the first invalid field.                                                 |
-| Validation | Zod 4                          | One schema validates forms, stored data and (later) CSV imports. TypeScript types are generated from it. |
-| Dates      | date-fns                       | Local-time calendar maths without timezone surprises.                                                    |
-| Icons      | Lucide React                   | Consistent, tree-shakeable icons.                                                                        |
-| Charts     | Recharts                       | Composable SVG charts; themed through the same CSS variables and loaded only when a chart is shown.      |
-| Tests      | Vitest + React Testing Library | Tests use the app the way people do: by role, label and text.                                            |
-| Quality    | ESLint (type-aware) + Prettier | Enforced locally and in CI.                                                                              |
+| Area    | Choice                                        | Why                                                                                          |
+| ------- | --------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| UI      | React 19 + TypeScript (strict)                | Function components and hooks; strict types catch mistakes before they run.                  |
+| Build   | Vite 8                                        | Fast dev server and builds; Vitest shares its configuration.                                 |
+| Styling | Tailwind CSS v4                               | Design tokens as CSS variables, so light and dark themes swap one set of values.             |
+| Routing | React Router 8                                | One layout route; each page's code loads the first time it's visited.                        |
+| Forms   | React Hook Form + Zod 4                       | One schema validates forms, stored data and CSV imports, and generates the TypeScript types. |
+| Charts  | Recharts                                      | Composable SVG charts, themed with the same tokens and loaded only when a chart is shown.    |
+| Dates   | date-fns                                      | Calendar maths in local time, without timezone surprises.                                    |
+| Icons   | Lucide React                                  | Consistent, tree-shakeable icons.                                                            |
+| Tests   | Vitest, React Testing Library, axe-core       | Tests use the app the way people do, plus automated accessibility checks.                    |
+| Quality | ESLint (type-aware), Prettier, GitHub Actions | Every pull request is type-checked, linted, tested and built.                                |
 
 ## Getting started
 
-**You'll need** [Node.js](https://nodejs.org/) 20 or later (the repo's `.nvmrc` pins 22) and npm.
+You'll need [Node.js](https://nodejs.org/) 20.19+ or 22.12+ (the repo's `.nvmrc` uses 22) and npm.
 
 ```bash
 git clone https://github.com/Ibz909/Finance-Tracker.git
@@ -55,52 +57,18 @@ npm run dev
 
 Open http://localhost:5173. To explore without typing anything, click **Explore with demo data** on the dashboard.
 
-## Scripts
+### Scripts
 
-| Command                           | What it does                                                             |
-| --------------------------------- | ------------------------------------------------------------------------ |
-| `npm run dev`                     | Starts the development server with hot reload.                           |
-| `npm run build`                   | Type-checks, then builds an optimised production bundle into `dist/`.    |
-| `npm run preview`                 | Serves the production build locally.                                     |
-| `npm run typecheck`               | Runs the TypeScript compiler without emitting files.                     |
-| `npm run lint` / `lint:fix`       | Lints with ESLint (and fixes what it can).                               |
-| `npm run format` / `format:check` | Formats with Prettier, or checks formatting.                             |
-| `npm test` / `test:watch`         | Runs the test suite once, or in watch mode.                              |
-| `npm run check`                   | Runs everything CI runs: typecheck, lint, format check, tests and build. |
+| Command                           | What it does                                                         |
+| --------------------------------- | -------------------------------------------------------------------- |
+| `npm run dev`                     | Starts the development server with hot reload.                       |
+| `npm run build`                   | Type-checks, then builds a production bundle into `dist/`.           |
+| `npm run preview`                 | Serves the production build locally.                                 |
+| `npm test` / `npm run test:watch` | Runs the tests once, or in watch mode.                               |
+| `npm run lint` / `npm run format` | Lints with ESLint, or formats with Prettier.                         |
+| `npm run check`                   | Runs everything CI runs: types, lint, formatting, tests and a build. |
 
-GitHub Actions runs the same checks on every pull request to `main` and on every push to `main`.
-
-## Project structure
-
-```text
-src/
-├── app/            App root, routes and route-level pages (404, error)
-├── components/
-│   ├── charts/     Chart cards, Recharts charts (lazy-loaded) and accessible data tables
-│   ├── layout/     App shell: sidebar, top bar, mobile drawer, banners
-│   └── ui/         Reusable pieces: Button, Dialog, FormField, StatCard…
-├── constants/      Categories, budget thresholds, money limits, navigation, storage keys
-├── context/        Providers: app data (with reducer), theme, toasts, dialogs, month
-├── features/       One folder per feature, holding its components and pure logic
-│   ├── analytics/  Range presets, chart data and the analytics page
-│   ├── budgets/    Budget progress maths, forms and cards
-│   ├── dashboard/  Monthly summary calculations and dashboard UI
-│   ├── demo/       Deterministic demo-data generator
-│   ├── savings/    Savings goals page (coming soon)
-│   ├── settings/   Appearance and demo data settings
-│   └── transactions/ Form, list, schemas, search, filters and sorting
-├── hooks/          Custom hooks that read the contexts above
-├── models/         Zod schemas and the TypeScript types inferred from them
-├── services/
-│   └── storage/    Versioned localStorage repository, migrations, decoding
-├── styles/         Tailwind entry point and design tokens
-├── test/           Test setup, fixtures and render helpers
-└── utils/          Money, date and formatting helpers
-```
-
-Tests sit next to the code they cover, e.g. `summary.ts` and `summary.test.ts`.
-
-## How it works
+## How it's built
 
 ### Data flow
 
@@ -112,123 +80,53 @@ AppData context ◄───────────────── new state
                                                                (localStorage today)
 ```
 
-- **One source of truth.** All financial data lives in a single `AppDataProvider`. State and `dispatch` are in separate contexts, so components that only trigger actions don't re-render when data changes.
-- **Totals are never stored.** Income, expenses, net cash flow and savings rate are calculated from transactions with pure, tested functions, so they can't drift out of sync.
-- **Saving happens on dispatch.** Each change runs through the reducer and is saved once, immediately. A failed save shows a message instead of failing silently.
-- **Storage is swappable.** Components never touch `localStorage`; they go through a `DataRepository` interface. Moving to Supabase or a REST API means writing a new implementation (async, since a network is involved) without changing the UI.
+- **One source of truth.** All data lives in a single provider, and every change goes through a pure, tested reducer.
+- **Totals are never stored.** Balances, budget progress and savings are calculated from the records, so they can't drift out of sync.
+- **Storage is swappable.** Components never touch `localStorage` directly. They use a `DataRepository` interface, so a server-backed version could replace it without changing the pages.
 
-### Money
+### Key decisions
 
-Amounts are stored as **integer pence** (£12.50 → `1250`). In floating point, `0.1 + 0.2` is `0.30000000000000004`; integer pence are always exact.
+- **Money is stored as integer pence** (£12.50 is `1250`). Floating point can't represent most decimals exactly, but whole numbers are always exact. Typed amounts are parsed from their digits, never with `parseFloat`.
+- **Dates are calendar strings** (`YYYY-MM-DD`) read in local time. `new Date('2026-03-01')` means UTC midnight, which is a different day in some timezones, so the app never uses it.
+- **Stored data is versioned.** Data is saved as `{ schemaVersion, data }`, and older data is upgraded by a chain of tested migrations. Records are validated one by one on load, so one damaged record never loses the rest, and anything unreadable is backed up before being replaced.
+- **Recurring dates are counted from the start date,** never from the previous payment. That way a payment on 31 January falls on 28 February and then 31 March, instead of drifting to the 28th.
+- **Savings aren't transactions.** Moving money into a goal isn't spending, so it never affects budgets or charts.
+- **Imports are safe.** The CSV parser handles quoted commas and line breaks without a dependency. Exports guard against spreadsheet formula injection.
+- **Code loads when it's needed.** Each page, and the charting library, is downloaded the first time it's used.
 
-Typed amounts like `£1,234.56` are parsed from the string's digits, never with `parseFloat(x) * 100`. Values are formatted with `Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' })` only for display. The maximum single amount is £10,000,000.
+## Accessibility
 
-### Dates
+The app is designed to meet **WCAG 2.2 AA**.
 
-Calendar dates are stored as `YYYY-MM-DD` strings and months as `YYYY-MM`, always parsed in **local** time.
-
-`new Date('2026-03-01')` is read as UTC midnight, which is still 28 February in the Americas, so the app never uses it. "Today" and "this month" also come from the local calendar, not UTC. Because the strings are zero-padded, plain string comparison sorts them correctly.
-
-### Validation
-
-Zod schemas in `src/models` are the single source of truth for what valid data looks like:
-
-- **Forms** use them for inline errors.
-- **Action hooks** check input again before anything reaches state.
-- **Stored data** is validated record by record on load.
-
-The form adds only one step of its own: parsing the amount text into pence.
-
-### Storage format and recovery
-
-Data is saved under `finance-tracker:data` as `{ schemaVersion, data }`; the current version is **2**. When the shape changes, a migration upgrades older data step by step. Budgets were added this way: version 1 data had no budget list, so the first migration adds an empty one.
-
-```ts
-export const MIGRATIONS = {
-  1: (data) => (isRecord(data) ? { ...data, budgets: [] } : data), // v1 → v2
-};
-```
-
-Each migration is pure, never drops data it doesn't understand, and is covered by tests. Later features (savings goals, recurring transactions) will add their collections the same way.
-
-On load:
-
-- **Invalid records** are skipped one by one rather than discarding everything.
-- **Duplicate IDs** are dropped.
-- **Unreadable data** is copied to a `finance-tracker:data-backup:<timestamp>` key **before** anything is rewritten. If the backup can't be written, the original is left untouched.
-- **Data from a newer app version** is preserved rather than overwritten.
-
-The theme preference has its own key (`finance-tracker:theme`), because a tiny script in `index.html` must read it before the page first paints.
-
-### Budgets
-
-Budgets are standing monthly limits: set once, they apply to every month, and spending is counted per calendar month from expense transactions. Totals are never stored.
-
-- **The overall budget is separate** from category budgets, because spending in categories without a budget still counts towards it. Adding up category limits would miss it.
-- **Status thresholds compare whole numbers.** A budget is over at 100% and nearing its limit at 75%, checked as `spent × 100 ≥ limit × 75` rather than with a division, so exactly 75% can never be misjudged by floating-point rounding.
-- **One budget per scope.** You can't create two budgets for the same category, and demo budgets never replace one of yours.
-
-### Charts
-
-- **One data source per chart.** The same pure, tested function produces the chart's data, its written summary and its data table, so they can't disagree.
-- **Accessible by design.** Charts are decorative for screen readers; the summary and table carry the information. Colours come from theme tokens, and every category is also labelled in text.
-- **"No records" is not £0.** Months before your first transaction show as gaps in the trend, not as a drop to zero, and a trend needs at least two months of spending.
-- **Loaded on demand.** The chart code (mostly Recharts) is about 360 kB, so charts are lazy-loaded with `React.lazy`. The figures and summaries appear straight away.
-
-### URL state
-
-The analytics range and the transaction filters live in the URL rather than in component state, so a view can be refreshed, bookmarked or shared.
-
-- **Changing the range adds a history entry,** so Back returns to the previous range.
-- **Filters replace the current entry,** so Back leaves the page instead of undoing one keystroke at a time.
-- **Rapid updates are chained.** React Router's `setSearchParams` builds on the URL from the last render, so two changes in a row (such as typing quickly) could lose one. Filter updates build on a ref holding the latest parameters instead, and a regression test covers it.
-
-### Demo data
-
-Demo transactions and budgets are ordinary records with `isDemo: true` and IDs like `demo-2026-11-rent`, so every feature handles them exactly like real data.
-
-- **Clearing** them is a simple filter on that flag, so your own records can't be affected.
-- **Demo budgets** skip any category where you already have a budget.
-- **Loading** again replaces the previous demo set instead of duplicating it.
-- **The generator is deterministic:** the same month always gets the same amounts.
+- **Keyboard:** everything works from the keyboard, with a visible focus outline. Dialogs keep focus inside and return it to the button that opened them.
+- **Status in words:** budget and goal statuses are written out, not shown by colour alone. Every chart has a text summary and a data table, and the drawn chart itself is hidden from screen readers.
+- **Clear errors:** form errors are linked to their fields. Changes such as "Transaction added" and filter result counts are announced.
+- **Reflow:** layouts work at 320px wide and with enlarged text spacing, and the app respects "reduce motion".
+- **Automated checks:** axe-core runs on every page and the main dialogs in the test suite. A separate test checks the theme's text and control colours, in both themes, against the WCAG contrast minimums.
 
 ## Testing
 
 ```bash
-npm test          # run once
-npm run test:watch
+npm test
 ```
 
-The suite has 414 tests in 37 files and covers:
+There are over 650 tests:
 
-- **Pure logic:** money parsing and formatting, date maths (month ends, leap years), schemas, the reducer, monthly summaries, budget progress and thresholds, chart data and range presets, filtering and sorting, the demo generator.
-- **Storage:** missing, corrupted, partly invalid, newer-version and unavailable data, storage-full errors, and the v1 → v2 migration.
-- **User journeys,** rendered through the real routes and providers: adding, editing and deleting transactions and budgets, validation and focus, month and range switching, chart summaries and tables, search and filters (including URL state and rapid typing), themes, and loading and clearing demo data.
+- **Logic:** money parsing, date maths (month ends, leap years and UK clock changes), schemas, the reducer, migrations, budget and goal progress, recurring schedules, and CSV parsing and validation.
+- **User journeys:** each page is rendered through the real routes and providers, covering adding, editing and deleting records, validation and focus, filtering, imports, demo data and reset.
+- **Accessibility:** axe-core checks and theme contrast tests.
 
-**Tests never depend on the real date or timezone:**
-
-- They run with `TZ=America/Los_Angeles`, so any accidental UTC conversion shifts a date and fails the test.
-- "Today" is passed in or faked.
-
-jsdom doesn't implement `<dialog>.showModal()`, `matchMedia` or `ResizeObserver`, so `src/test/setup.ts` provides minimal stand-ins. Real dialog behaviour (focus and Escape) has also been checked in a browser.
+Tests never depend on the real date: "today" is fixed. They run in UK time (`Europe/London`), and date-handling tests use summer dates, when UK time differs from UTC.
 
 ## Data and privacy
 
-- **Your data never leaves your browser.** There's no backend, analytics or external API.
-- **It's stored in `localStorage` for this site,** so clearing your browser's site data, or using a private window, removes it. It isn't shared between browsers or devices.
-- **Back it up:** CSV export (Phase 3) will let you keep your own backups.
+- Your data is stored only in this browser's `localStorage`. Nothing is sent anywhere: there's no backend, analytics or third-party API.
+- Data isn't shared between browsers or devices. Clearing your browser's site data, or using a private window, removes it.
+- Use **Settings → Import and export** to keep a CSV backup of your transactions.
 
-## Known limitations
+## Limitations
 
-- **GBP only,** by design. There is no currency conversion.
-- **Single device and browser,** with no sync.
-- **Budgets are monthly only.** There are no weekly or yearly budgets, and a limit can't change from month to month.
-- **The main JavaScript bundle is about 585 kB** (about 177 kB gzipped), so `vite build` prints a chunk-size warning. Recharts is already in its own lazy-loaded chunk; route-level code-splitting is planned for Phase 4.
-- **Savings goals are a placeholder** for now and are clearly labelled "Coming soon".
-
-## Roadmap
-
-- **Phase 1 — Foundation ✅:** project setup and CI, app layout, themes, data layer, transactions, dashboard, demo data.
-- **Phase 2 — Budgets and analytics ✅:** monthly and category budgets, interactive charts, reporting ranges (last 3/6/12 months), transaction search, filters and sorting.
-- **Phase 3 — Advanced features:** recurring transactions, savings goals, CSV import and export, more settings including a safe data reset.
-- **Phase 4 — Portfolio polish:** responsive and accessibility review, code-splitting, screenshots, deployment, and a licence.
+- **GBP only,** by design.
+- **One browser on one device,** with no accounts or sync.
+- **CSV import and export cover transactions only,** not budgets, goals or recurring schedules.
+- Possible next steps: optional accounts with sync across devices, and a full backup and restore covering all data.
