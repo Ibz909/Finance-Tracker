@@ -4,6 +4,7 @@ import { AppShell } from '../components/layout/AppShell';
 import { AnalyticsPage } from '../features/analytics/AnalyticsPage';
 import { BudgetsPage } from '../features/budgets/BudgetsPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
+import { RecurringPage } from '../features/recurring/RecurringPage';
 import { SavingsGoalsPage } from '../features/savings/SavingsGoalsPage';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { TransactionsPage } from '../features/transactions/TransactionsPage';
@@ -27,6 +28,7 @@ export const routes: RouteObject[] = [
         handle: { usesReportingMonth: true } satisfies RouteHandle,
       },
       { path: 'transactions', element: <TransactionsPage /> },
+      { path: 'recurring', element: <RecurringPage /> },
       {
         path: 'budgets',
         element: <BudgetsPage />,
