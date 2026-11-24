@@ -23,7 +23,7 @@ export function RangeSelector({ value, months, onChange }: RangeSelectorProps) {
           {RANGE_PRESETS.map((preset) => (
             <label
               key={preset.id}
-              className="flex h-10 cursor-pointer items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground has-checked:bg-surface has-checked:text-foreground has-checked:shadow-sm has-focus-visible:outline-2 has-focus-visible:outline-accent"
+              className="flex h-10 cursor-pointer items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground has-checked:bg-surface has-checked:text-foreground has-checked:shadow-[inset_0_-2px_0_var(--color-accent),0_1px_2px_rgb(0_0_0/0.06)] has-focus-visible:outline-2 has-focus-visible:outline-accent"
             >
               <input
                 type="radio"

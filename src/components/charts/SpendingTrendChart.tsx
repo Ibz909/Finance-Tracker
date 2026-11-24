@@ -26,7 +26,11 @@ export function SpendingTrendChart({ points }: { points: readonly TrendPoint[] }
 
   return (
     <ResponsiveContainer width="100%" height={256}>
-      <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+      <LineChart
+        data={data}
+        margin={{ top: 8, right: 16, bottom: 0, left: 0 }}
+        accessibilityLayer={false}
+      >
         <CartesianGrid vertical={false} stroke={CHART_COLORS.grid} />
         <XAxis
           dataKey="label"
