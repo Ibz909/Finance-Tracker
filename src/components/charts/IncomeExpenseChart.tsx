@@ -32,7 +32,11 @@ export function IncomeExpenseChart({ totals }: { totals: readonly MonthTotals[] 
 
   return (
     <ResponsiveContainer width="100%" height={256}>
-      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+      <BarChart
+        data={data}
+        margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+        accessibilityLayer={false}
+      >
         <CartesianGrid vertical={false} stroke={CHART_COLORS.grid} />
         <XAxis
           dataKey="label"

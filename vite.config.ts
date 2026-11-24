@@ -7,7 +7,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    css: false,
+    // Only the stylesheet's raw text is needed, by the theme contrast test.
+    css: { include: [/src\/styles\/index\.css/] },
     restoreMocks: true,
     // A timezone behind UTC, so any accidental UTC date conversion shifts
     // a date by a day and fails a test instead of passing on a UK machine.

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Suspense, useId } from 'react';
+import { ChartFrame } from './ChartFrame';
 
 interface ChartCardProps {
   title: string;
@@ -47,9 +48,9 @@ export function ChartCard({
       ) : (
         <>
           <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
-          <div className="mt-4">
+          <ChartFrame>
             <Suspense fallback={<ChartSkeleton />}>{chart}</Suspense>
-          </div>
+          </ChartFrame>
           {table}
         </>
       )}
