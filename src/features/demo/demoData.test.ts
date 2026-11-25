@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createEmptyAppData } from '../../models/appData';
 import { budgetKey, budgetSchema } from '../../models/budget';
+import { recurringScheduleSchema } from '../../models/recurring';
 import { goalContributionSchema, savingsGoalSchema } from '../../models/savings';
 import { transactionSchema } from '../../models/transaction';
 import {
@@ -10,13 +11,17 @@ import {
   makeSchedule,
   makeTransaction,
 } from '../../test/fixtures';
+import { todayIsoDate } from '../../utils/dates';
 import { getMonthBudgets } from '../budgets/budgetProgress';
+import { catchUpAll } from '../recurring/catchUp';
+import { nthOccurrence } from '../recurring/schedule';
 import { savedPence } from '../savings/goalProgress';
 import {
   DEMO_ID_PREFIX,
   DEMO_MONTHS,
   generateDemoBudgets,
   generateDemoGoals,
+  generateDemoSchedules,
   generateDemoTransactions,
   hasDemoData,
 } from './demoData';
@@ -170,5 +175,93 @@ describe('hasDemoData', () => {
     ['goalContributions', { goalContributions: [makeContribution('goal-1', { isDemo: true })] }],
   ])('is true when %s include a demo record', (_name, records) => {
     expect(hasDemoData({ ...createEmptyAppData(), ...records })).toBe(true);
+  });
+});
+
+describe('generateDemoSchedules', () => {
+  const schedules = generateDemoSchedules(NOW);
+
+  it('gives valid, flagged monthly schedules, one of them paused', () => {
+    expect(schedules.map((s) => s.description)).toEqual([
+      'Monthly salary',
+      'Rent',
+      'Council tax',
+      'Mobile phone contract',
+      'Music streaming',
+      'Video streaming',
+      'Gym membership',
+    ]);
+    for (const schedule of schedules) {
+      expect(recurringScheduleSchema.safeParse(schedule).success).toBe(true);
+      expect(schedule.id.startsWith(DEMO_ID_PREFIX)).toBe(true);
+      expect(schedule).toMatchObject({ isDemo: true, frequency: 'monthly' });
+    }
+    expect(schedules.filter((s) => s.paused).map((s) => s.description)).toEqual([
+      'Video streaming',
+    ]);
+  });
+
+  it('is deterministic', () => {
+    expect(generateDemoSchedules(NOW)).toEqual(schedules);
+  });
+
+  it('links exactly the matching demo history, one payment per month', () => {
+    const ids = new Set(schedules.map((s) => s.id));
+    const linked = demo.filter((t) => t.recurringScheduleId !== undefined);
+    expect(linked.every((t) => ids.has(t.recurringScheduleId ?? ''))).toBe(true);
+
+    for (const schedule of schedules) {
+      const history = linked.filter((t) => t.recurringScheduleId === schedule.id);
+      expect(history.length).toBeGreaterThan(0);
+      history.forEach((t, n) => {
+        expect(t).toMatchObject({
+          date: nthOccurrence(schedule.startDate, 'monthly', n),
+          amountPence: schedule.amountPence,
+          description: schedule.description,
+          categoryId: schedule.categoryId,
+          type: schedule.type,
+        });
+      });
+      // The next payment is the one straight after the last in the history.
+      expect(schedule.nextDueDate).toBe(
+        nthOccurrence(schedule.startDate, 'monthly', history.length),
+      );
+    }
+  });
+
+  it.each([
+    ['the 1st', new Date(2026, 10, 1, 9, 0)],
+    ['mid-month', NOW],
+    ['the last day of a month', new Date(2026, 10, 30, 23, 0)],
+    ['a leap day', new Date(2028, 1, 29, 12, 0)],
+  ])('is next due after today, so catch-up adds nothing on %s', (_when, now) => {
+    const today = todayIsoDate(now);
+    const loaded = generateDemoSchedules(now);
+    const history = generateDemoTransactions(now);
+
+    for (const schedule of loaded) {
+      expect(schedule.nextDueDate !== null && schedule.nextDueDate > today).toBe(true);
+    }
+    const result = catchUpAll(loaded, history, { today, now: now.toISOString() });
+    expect(result.transactions).toBe(history);
+  });
+
+  it('adds next month’s payments for active schedules only, a month later', () => {
+    const later = new Date(2026, 11, 15, 12, 0);
+    const result = catchUpAll(schedules, demo, {
+      today: '2026-12-15',
+      now: later.toISOString(),
+    });
+
+    const added = result.transactions.slice(demo.length);
+    expect(added.map((t) => `${t.date} ${t.description}`)).toEqual([
+      '2026-12-01 Monthly salary',
+      '2026-12-01 Rent',
+      '2026-12-03 Council tax',
+      '2026-12-12 Mobile phone contract',
+      '2026-12-05 Music streaming',
+      '2026-12-02 Gym membership',
+    ]);
+    expect(added.every((t) => t.isDemo)).toBe(true);
   });
 });

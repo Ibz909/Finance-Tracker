@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AppData } from '../models/appData';
 import { createEmptyAppData } from '../models/appData';
 import type { TransactionDraft } from '../models/transaction';
-import { makeBudget, makeTransaction } from '../test/fixtures';
+import { makeBudget, makeSchedule, makeTransaction } from '../test/fixtures';
 import { appDataReducer } from './appDataReducer';
 
 function stateWith(...transactions: AppData['transactions']): AppData {
@@ -218,6 +218,22 @@ describe('demo budgets', () => {
 
     expect(after.transactions).toEqual([]);
     expect(after.budgets).toEqual([realGroceries]);
+  });
+
+  it('replaces earlier demo schedules on reload, keeping real ones', () => {
+    const real = makeSchedule({ id: 'real-s', isDemo: false });
+    const oldDemo = makeSchedule({ id: 'demo-old', isDemo: true });
+    const freshDemo = makeSchedule({ id: 'demo-new', isDemo: true });
+    const state = { ...createEmptyAppData(), recurringSchedules: [oldDemo, real] };
+
+    const after = appDataReducer(state, {
+      type: 'demoDataLoaded',
+      transactions: [],
+      budgets: [],
+      schedules: [freshDemo],
+    });
+
+    expect(after.recurringSchedules).toEqual([real, freshDemo]);
   });
 
   it('clears when only demo budgets remain', () => {

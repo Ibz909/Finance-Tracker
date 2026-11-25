@@ -2,10 +2,13 @@ import type { DefaultCategoryId } from '../../constants/categories';
 import type { AppData } from '../../models/appData';
 import type { Budget } from '../../models/budget';
 import type { TransactionType } from '../../models/primitives';
+import type { RecurringSchedule } from '../../models/recurring';
 import type { GoalContribution, SavingsGoal } from '../../models/savings';
 import type { Transaction } from '../../models/transaction';
 import type { IsoDate, MonthKey } from '../../utils/dates';
 import { currentMonthKey, shiftMonth, todayIsoDate } from '../../utils/dates';
+import { dayAfter } from '../recurring/catchUp';
+import { firstOccurrenceOnOrAfter } from '../recurring/schedule';
 
 /** How many calendar months of history the demo covers, including this one. */
 export const DEMO_MONTHS = 6;
@@ -42,6 +45,11 @@ interface DemoItem {
   amounts: readonly number[];
   /** Which calendar months (by month number % length) include this item. Default: all. */
   inMonth?: (monthNumber: number) => boolean;
+  /**
+   * Also a monthly recurring schedule. Only for items in every month with
+   * one fixed amount, so the schedule matches the history exactly.
+   */
+  recurring?: 'active' | 'paused';
 }
 
 const everyOther = (n: number) => n % 2 === 0;
@@ -61,6 +69,7 @@ const ITEMS: readonly DemoItem[] = [
     description: 'Monthly salary',
     day: 1,
     amounts: [265000],
+    recurring: 'active',
   },
   {
     key: 'freelance',
@@ -97,6 +106,7 @@ const ITEMS: readonly DemoItem[] = [
     description: 'Rent',
     day: 1,
     amounts: [95000],
+    recurring: 'active',
   },
   {
     key: 'council-tax',
@@ -105,6 +115,7 @@ const ITEMS: readonly DemoItem[] = [
     description: 'Council tax',
     day: 3,
     amounts: [14800],
+    recurring: 'active',
   },
   {
     key: 'energy',
@@ -121,6 +132,7 @@ const ITEMS: readonly DemoItem[] = [
     description: 'Mobile phone contract',
     day: 12,
     amounts: [1800],
+    recurring: 'active',
   },
   // Subscriptions and health
   {
@@ -130,6 +142,7 @@ const ITEMS: readonly DemoItem[] = [
     description: 'Music streaming',
     day: 5,
     amounts: [1199],
+    recurring: 'active',
   },
   {
     key: 'video',
@@ -138,6 +151,7 @@ const ITEMS: readonly DemoItem[] = [
     description: 'Video streaming',
     day: 18,
     amounts: [1099],
+    recurring: 'paused',
   },
   {
     key: 'gym',
@@ -146,6 +160,7 @@ const ITEMS: readonly DemoItem[] = [
     description: 'Gym membership',
     day: 2,
     amounts: [3500],
+    recurring: 'active',
   },
   // Everyday spending
   {
@@ -303,11 +318,50 @@ export function generateDemoTransactions(now: Date = new Date()): Transaction[] 
         date,
         createdAt: timestamp,
         updatedAt: timestamp,
+        // Linked as if its schedule had added it, like a real recurring payment.
+        ...(item.recurring ? { recurringScheduleId: demoScheduleId(item.key) } : {}),
         isDemo: true,
       });
     }
   }
   return transactions;
+}
+
+function demoScheduleId(itemKey: string): string {
+  return `${DEMO_ID_PREFIX}recurring-${itemKey}`;
+}
+
+/**
+ * Monthly schedules behind the demo's regular payments (salary, rent,
+ * subscriptions...). Each starts with the demo history, whose payments are
+ * already linked to it, and is next due after today, so catch-up never adds
+ * a payment the history already has. One is paused, to show that state.
+ */
+export function generateDemoSchedules(now: Date = new Date()): RecurringSchedule[] {
+  const today = todayIsoDate(now);
+  const firstMonth = shiftMonth(currentMonthKey(now), -(DEMO_MONTHS - 1));
+
+  return ITEMS.flatMap((item) => {
+    if (!item.recurring) return [];
+    const startDate = `${firstMonth}-${String(item.day).padStart(2, '0')}`;
+    const timestamp = `${startDate}T12:00:00.000Z`;
+    return [
+      {
+        id: demoScheduleId(item.key),
+        type: item.type,
+        amountPence: item.amounts[0] ?? 0,
+        categoryId: item.categoryId,
+        description: item.description,
+        frequency: 'monthly',
+        startDate,
+        nextDueDate: firstOccurrenceOnOrAfter(startDate, 'monthly', dayAfter(today)),
+        paused: item.recurring === 'paused',
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        isDemo: true,
+      },
+    ];
+  });
 }
 
 /**
