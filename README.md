@@ -1,10 +1,15 @@
 # Finance Tracker
 
 [![CI](https://github.com/Ibz909/Finance-Tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/Ibz909/Finance-Tracker/actions/workflows/ci.yml)
+[![Deploy](https://github.com/Ibz909/Finance-Tracker/actions/workflows/deploy.yml/badge.svg)](https://github.com/Ibz909/Finance-Tracker/actions/workflows/deploy.yml)
 
 A personal finance tracker for recording income and spending in GBP, setting budgets, saving towards goals and seeing where your money goes. Built with React, TypeScript and Tailwind CSS.
 
 **Everything stays in your browser:** there is no server, no account and no tracking.
+
+### [Try it live →](https://ibz909.github.io/Finance-Tracker/)
+
+Turn on **Demo data** in the top bar to explore with six months of fictional data, then turn it off to start with your own.
 
 ![Dashboard in the light theme, showing monthly income, expenses, net cash flow, savings rate and recent transactions](docs/screenshots/dashboard-light.jpg)
 
@@ -25,7 +30,7 @@ A personal finance tracker for recording income and spending in GBP, setting bud
 - **Savings goals:** record deposits and withdrawals towards a target, and see how much to save each month to reach it by a date. Saving isn't counted as spending.
 - **CSV import and export:** export transactions to open in a spreadsheet or keep as a backup. Imports are checked row by row and previewed before anything is saved, with duplicates skipped.
 - **Themes:** light, dark or follow your device, with no flash of the wrong theme on load.
-- **Demo data:** one click loads six months of clearly labelled fictional data. Clearing it never touches your own records.
+- **Demo data:** the **Demo data** switch in the top bar loads six months of clearly labelled fictional transactions, budgets, recurring payments and savings goals. Turning it off never touches your own records.
 - **Safe reset:** delete everything after typing a confirmation word, with an option to export first.
 - **Accessible and responsive:** designed to meet WCAG 2.2 AA, with full keyboard support. Works on screens from 320px wide.
 
@@ -55,7 +60,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5173. To explore without typing anything, click **Explore with demo data** on the dashboard.
+Open http://localhost:5173. To explore without typing anything, turn on **Demo data** in the top bar.
 
 ### Scripts
 
@@ -93,6 +98,7 @@ AppData context ◄───────────────── new state
 - **Savings aren't transactions.** Moving money into a goal isn't spending, so it never affects budgets or charts.
 - **Imports are safe.** The CSV parser handles quoted commas and line breaks without a dependency. Exports guard against spreadsheet formula injection.
 - **Code loads when it's needed.** Each page, and the charting library, is downloaded the first time it's used.
+- **Deploys only after the tests pass.** Every merge to `main` runs CI, and only a passing commit is published to GitHub Pages. If a new version goes out while the app is open, it reloads once to pick it up instead of failing.
 
 ## Accessibility
 
