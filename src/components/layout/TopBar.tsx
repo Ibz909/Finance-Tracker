@@ -3,6 +3,7 @@ import { useMatches } from 'react-router';
 import { routeUsesReportingMonth } from '../../app/routeHandle';
 import { useTransactionDialog } from '../../hooks/useTransactionDialog';
 import { Button } from '../ui/Button';
+import { DemoDataToggle } from './DemoDataToggle';
 import { MOBILE_NAV_ID } from './MobileNav';
 import { MonthPicker } from './MonthPicker';
 import { ThemeToggle } from './ThemeToggle';
@@ -39,6 +40,7 @@ export function TopBar({ title, isMenuOpen, onOpenMenu }: TopBarProps) {
         </div>
       )}
       <div className="ml-auto flex items-center gap-1">
+        <DemoDataToggle />
         <ThemeToggle />
         <Button onClick={openAddTransaction} className="ml-1 px-3 sm:px-4">
           <Plus aria-hidden="true" className="size-5" />

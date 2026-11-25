@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
+import { createEmptyAppData } from '../../models/appData';
 import { budgetKey, budgetSchema } from '../../models/budget';
 import { goalContributionSchema, savingsGoalSchema } from '../../models/savings';
 import { transactionSchema } from '../../models/transaction';
+import {
+  makeBudget,
+  makeContribution,
+  makeGoal,
+  makeSchedule,
+  makeTransaction,
+} from '../../test/fixtures';
 import { getMonthBudgets } from '../budgets/budgetProgress';
 import { savedPence } from '../savings/goalProgress';
 import {
@@ -10,6 +18,7 @@ import {
   generateDemoBudgets,
   generateDemoGoals,
   generateDemoTransactions,
+  hasDemoData,
 } from './demoData';
 
 const NOW = new Date(2026, 10, 15, 12, 0); // 15 November 2026, local time
@@ -135,5 +144,31 @@ describe('generateDemoGoals', () => {
 
   it('is deterministic', () => {
     expect(generateDemoGoals(NOW)).toEqual(generateDemoGoals(NOW));
+  });
+});
+
+describe('hasDemoData', () => {
+  it('is false with no data, or only real data', () => {
+    expect(hasDemoData(createEmptyAppData())).toBe(false);
+    expect(
+      hasDemoData({
+        ...createEmptyAppData(),
+        transactions: [makeTransaction({ isDemo: false })],
+        budgets: [makeBudget({ isDemo: false })],
+        recurringSchedules: [makeSchedule({ isDemo: false })],
+        savingsGoals: [makeGoal({ isDemo: false })],
+        goalContributions: [makeContribution('goal-1', { isDemo: false })],
+      }),
+    ).toBe(false);
+  });
+
+  it.each([
+    ['transactions', { transactions: [makeTransaction({ isDemo: true })] }],
+    ['budgets', { budgets: [makeBudget({ isDemo: true })] }],
+    ['recurringSchedules', { recurringSchedules: [makeSchedule({ isDemo: true })] }],
+    ['savingsGoals', { savingsGoals: [makeGoal({ isDemo: true })] }],
+    ['goalContributions', { goalContributions: [makeContribution('goal-1', { isDemo: true })] }],
+  ])('is true when %s include a demo record', (_name, records) => {
+    expect(hasDemoData({ ...createEmptyAppData(), ...records })).toBe(true);
   });
 });

@@ -1,4 +1,5 @@
 import type { DefaultCategoryId } from '../../constants/categories';
+import type { AppData } from '../../models/appData';
 import type { Budget } from '../../models/budget';
 import type { TransactionType } from '../../models/primitives';
 import type { GoalContribution, SavingsGoal } from '../../models/savings';
@@ -9,6 +10,26 @@ import { currentMonthKey, shiftMonth, todayIsoDate } from '../../utils/dates';
 /** How many calendar months of history the demo covers, including this one. */
 export const DEMO_MONTHS = 6;
 export const DEMO_ID_PREFIX = 'demo-';
+
+/**
+ * True when any demo record is loaded. The top-bar switch and the banner
+ * both use this, so "demo data on" always means demo records exist: there is
+ * no separate stored flag that could disagree with the data.
+ */
+export function hasDemoData(
+  data: Pick<
+    AppData,
+    'transactions' | 'budgets' | 'recurringSchedules' | 'savingsGoals' | 'goalContributions'
+  >,
+): boolean {
+  return (
+    data.transactions.some((t) => t.isDemo) ||
+    data.budgets.some((b) => b.isDemo) ||
+    data.recurringSchedules.some((s) => s.isDemo) ||
+    data.savingsGoals.some((g) => g.isDemo) ||
+    data.goalContributions.some((c) => c.isDemo)
+  );
+}
 
 interface DemoItem {
   /** Unique within a month; becomes part of the stable ID. */
