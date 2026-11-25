@@ -1,5 +1,6 @@
 import { FlaskConical } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
+import { hasDemoData } from '../../features/demo/demoData';
 import { useAppData } from '../../hooks/useAppData';
 
 /**
@@ -8,14 +9,10 @@ import { useAppData } from '../../hooks/useAppData';
  * section explains it in full.
  */
 export function DemoDataBanner() {
-  const { transactions, budgets, savingsGoals } = useAppData();
+  const data = useAppData();
   const { pathname } = useLocation();
-  const hasDemoData =
-    transactions.some((t) => t.isDemo) ||
-    budgets.some((b) => b.isDemo) ||
-    savingsGoals.some((g) => g.isDemo);
 
-  if (!hasDemoData || pathname === '/settings') return null;
+  if (!hasDemoData(data) || pathname === '/settings') return null;
 
   return (
     <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm">
