@@ -2,7 +2,18 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
+/**
+ * The path the app is served from. "/" by default; the GitHub Pages deploy
+ * sets BASE_PATH=/Finance-Tracker/ because the site lives in a sub-folder.
+ * A host serving from the domain root (Netlify, Vercel) needs nothing.
+ */
+const base = process.env.BASE_PATH ?? '/';
+if (!base.startsWith('/') || !base.endsWith('/')) {
+  throw new Error(`BASE_PATH must start and end with "/", got "${base}"`);
+}
+
 export default defineConfig({
+  base,
   plugins: [react(), tailwindcss()],
   test: {
     environment: 'jsdom',

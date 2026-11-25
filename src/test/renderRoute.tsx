@@ -21,6 +21,8 @@ interface Options {
   now?: Date;
   /** Defaults to the app's routes with pages imported directly (no waiting). */
   routes?: RouteObject[];
+  /** The router's basename, as when the app is served from a sub-folder. */
+  basename?: string;
 }
 
 /**
@@ -29,9 +31,17 @@ interface Options {
  */
 export function renderRoute(
   path = '/',
-  { repository = createMemoryRepository(), now = TEST_NOW, routes = eagerRoutes }: Options = {},
+  {
+    repository = createMemoryRepository(),
+    now = TEST_NOW,
+    routes = eagerRoutes,
+    basename,
+  }: Options = {},
 ) {
-  const router = createMemoryRouter(routes, { initialEntries: [path] });
+  const router = createMemoryRouter(routes, {
+    initialEntries: [path],
+    ...(basename === undefined ? {} : { basename }),
+  });
   const user = userEvent.setup();
   return {
     user,

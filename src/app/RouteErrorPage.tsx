@@ -15,8 +15,9 @@ export function RouteErrorPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           An unexpected error stopped this page from loading. Your saved data has not been changed.
         </p>
+        {/* A full page load (not a router link), from wherever the app is served. */}
         <a
-          href="/"
+          href={import.meta.env.BASE_URL}
           className="mt-6 inline-flex h-11 items-center rounded-lg bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent/90 sm:h-10"
         >
           Reload the app
