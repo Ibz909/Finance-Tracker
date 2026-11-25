@@ -61,6 +61,7 @@ export type AppDataAction =
       budgets: Budget[];
       goals?: SavingsGoal[];
       contributions?: GoalContribution[];
+      schedules?: RecurringSchedule[];
     }
   /** Removes every record flagged isDemo, and nothing else. */
   | { type: 'demoDataCleared' }
@@ -204,6 +205,10 @@ export function appDataReducer(state: AppData, action: AppDataAction): AppData {
         ...state,
         transactions: [...state.transactions.filter((t) => !t.isDemo), ...action.transactions],
         budgets: [...realBudgets, ...action.budgets.filter((b) => !taken.has(budgetKey(b)))],
+        recurringSchedules: [
+          ...state.recurringSchedules.filter((s) => !s.isDemo),
+          ...(action.schedules ?? []),
+        ],
         savingsGoals: [...state.savingsGoals.filter((g) => !g.isDemo), ...(action.goals ?? [])],
         goalContributions: [
           ...state.goalContributions.filter((c) => !c.isDemo),

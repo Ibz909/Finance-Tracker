@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import {
   generateDemoBudgets,
   generateDemoGoals,
+  generateDemoSchedules,
   generateDemoTransactions,
 } from '../features/demo/demoData';
 import { useAppDispatch } from './useAppData';
@@ -21,6 +22,7 @@ export function useDemoDataActions() {
           budgets: generateDemoBudgets(now),
           goals,
           contributions,
+          schedules: generateDemoSchedules(now),
         });
       },
       clearDemoData: () => {

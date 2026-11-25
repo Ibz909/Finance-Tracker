@@ -4,12 +4,18 @@ import { createEmptyAppData } from '../../models/appData';
 import { createMemoryRepository } from '../../services/storage/memoryRepository';
 import { makeTransaction } from '../../test/fixtures';
 import { renderRoute } from '../../test/renderRoute';
-import { generateDemoBudgets, generateDemoGoals, generateDemoTransactions } from './demoData';
+import {
+  generateDemoBudgets,
+  generateDemoGoals,
+  generateDemoSchedules,
+  generateDemoTransactions,
+} from './demoData';
 
 const NOW = new Date(2026, 10, 15, 12, 0);
 const DEMO_COUNT = generateDemoTransactions(NOW).length;
 const DEMO_BUDGET_COUNT = generateDemoBudgets(NOW).length;
 const DEMO_GOAL_COUNT = generateDemoGoals(NOW).goals.length;
+const DEMO_SCHEDULE_COUNT = generateDemoSchedules(NOW).length;
 
 const realTransaction = makeTransaction({
   id: 'real-1',
@@ -93,6 +99,30 @@ describe('Loading demo data', () => {
       'href',
       '/settings#demo-data',
     );
+  });
+});
+
+describe('Demo recurring schedules', () => {
+  it('appear on the Recurring page, marked as demo, and go when demo data is cleared', async () => {
+    const { user } = renderRoute('/settings', { repository: withRealData() });
+    await user.click(screen.getByRole('button', { name: 'Load demo data' }));
+
+    const nav = screen.getByRole('navigation', { name: 'Primary' });
+    await user.click(within(nav).getByRole('link', { name: 'Recurring' }));
+    const rows = within(screen.getByRole('main')).getAllByRole('listitem');
+    expect(rows).toHaveLength(DEMO_SCHEDULE_COUNT);
+    for (const row of rows) {
+      expect(within(row).getByText('Demo')).toBeInTheDocument();
+    }
+    expect(screen.getByRole('button', { name: 'Resume Video streaming' })).toBeInTheDocument();
+
+    await user.click(within(nav).getByRole('link', { name: 'Settings' }));
+    await user.click(within(demoSection()).getByRole('button', { name: 'Clear demo data' }));
+    const confirm = screen.getByRole('dialog', { name: 'Clear demo data?' });
+    await user.click(within(confirm).getByRole('button', { name: 'Clear demo data' }));
+    await user.click(within(nav).getByRole('link', { name: 'Recurring' }));
+
+    expect(screen.queryByText('Monthly salary')).not.toBeInTheDocument();
   });
 });
 
