@@ -35,4 +35,14 @@ export const lazyPage: PageRoute = (name) => ({ lazy: LAZY_PAGES[name] });
 
 export const routes = createRoutes(lazyPage);
 
-export const router = createBrowserRouter(routes);
+/**
+ * React Router's basename for an app served from `baseUrl` (Vite's
+ * BASE_URL): "/Finance-Tracker/" becomes "/Finance-Tracker", "/" stays "/".
+ */
+export function routerBasename(baseUrl: string): string {
+  return baseUrl === '/' ? '/' : baseUrl.replace(/\/$/, '');
+}
+
+export const router = createBrowserRouter(routes, {
+  basename: routerBasename(import.meta.env.BASE_URL),
+});
