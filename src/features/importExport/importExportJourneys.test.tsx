@@ -64,7 +64,7 @@ describe('Exporting', () => {
 
     await user.click(screen.getByRole('button', { name: 'Export all transactions' }));
 
-    expect(downloads[0]?.name).toBe('finance-tracker-transactions-2026-11-15.csv');
+    expect(downloads[0]?.name).toBe('penceplot-transactions-2026-11-15.csv');
     // The file starts with a UTF-8 byte-order mark (EF BB BF) so Excel reads "£" and "&".
     const bytes = new Uint8Array(await (downloads[0]?.blob ?? new Blob()).arrayBuffer());
     expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);

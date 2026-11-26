@@ -14,7 +14,7 @@ web
 
 ## Product Purpose
 
-A personal finance tracker that shows where your money goes, whether you're staying within your budgets, and how close you are to your savings goals, without handing your financial data to anyone. Success for a user is a quick, trustworthy answer about their month and confidence that the numbers are right. Success for the portfolio is that a visitor can see a finished, careful, professional product within a minute of opening it.
+PencePlot is a personal finance tracker that shows where your money goes, whether you're staying within your budgets, and how close you are to your savings goals, without handing your financial data to anyone. Success for a user is a quick, trustworthy answer about their month and confidence that the numbers are right. Success for the portfolio is that a visitor can see a finished, careful, professional product within a minute of opening it.
 
 ## Positioning
 
@@ -68,7 +68,10 @@ All four of these are confirmed points of difference that later work must protec
 
 ## Brand Commitments
 
-- **Name:** Finance Tracker.
+- **Name:** PencePlot. Written "PencePlot" in prose and titles, and as the lowercase wordmark "penceplot" in the sidebar logo.
+- **Tagline:** "Your money, in focus." It sits under the wordmark and in the app's metadata. Keep it exactly as written, including the full stop.
+- **Browser title:** "PencePlot | Personal Finance", with the page name in front on each page (for example "Budgets · PencePlot | Personal Finance").
+- **Unchanged identifiers:** the GitHub repository and live address keep the name Finance-Tracker, and stored data keeps its `finance-tracker:` keys, so existing users' data is untouched.
 - **Design aim** (set by the owner): a distinctive, professional fintech design rather than generic app conventions. It sits alongside the "calm over clever" principle: the app should feel distinctive through precision and craft, not through noise.
 - **Voice** (observed in the shipped copy, not separately confirmed): plain British English, sentence case, short reassuring sentences, typographic quotes and apostrophes ("You're viewing fictional demo data."). Status words are always written out.
 

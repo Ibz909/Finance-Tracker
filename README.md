@@ -1,9 +1,11 @@
-# Finance Tracker
+# <img src="public/favicon.svg" alt="" width="32" height="32"> PencePlot
+
+**Your money, in focus.**
 
 [![CI](https://github.com/Ibz909/Finance-Tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/Ibz909/Finance-Tracker/actions/workflows/ci.yml)
 [![Deploy](https://github.com/Ibz909/Finance-Tracker/actions/workflows/deploy.yml/badge.svg)](https://github.com/Ibz909/Finance-Tracker/actions/workflows/deploy.yml)
 
-A personal finance tracker for recording income and spending in GBP, setting budgets, saving towards goals and seeing where your money goes. Built with React, TypeScript and Tailwind CSS.
+PencePlot is a personal finance tracker for recording income and spending in GBP, setting budgets, saving towards goals and seeing where your money goes. Built with React, TypeScript and Tailwind CSS.
 
 **Everything stays in your browser:** there is no server, no account and no tracking.
 
@@ -11,11 +13,11 @@ A personal finance tracker for recording income and spending in GBP, setting bud
 
 Turn on **Demo data** in the top bar to explore with six months of fictional data, then turn it off to start with your own.
 
-![Dashboard in the light theme, showing monthly income, expenses, net cash flow, savings rate and recent transactions](docs/screenshots/dashboard-light.jpg)
+![PencePlot's Overview in the light theme, led by net cash flow, with income, expenses, savings rate, a cash flow chart beside the monthly budget, and recent activity](docs/screenshots/dashboard-light.jpg)
 
 <p>
-  <img src="docs/screenshots/analytics-dark.jpg" alt="Analytics page in the dark theme, with an income versus expenses bar chart, a spending trend line and a category ranking" width="64%">
-  <img src="docs/screenshots/budgets-mobile.jpg" alt="Budgets page on a phone, showing an overall budget nearing its limit and a groceries budget on track" width="30%">
+  <img src="docs/screenshots/analytics-dark.jpg" alt="PencePlot's Analytics page in the dark theme, with an income versus expenses bar chart, a spending trend line and a category ranking" width="64%">
+  <img src="docs/screenshots/budgets-mobile.jpg" alt="PencePlot's Budgets page on a phone, showing the amount available to spend, a gauge of the monthly budget used, and category budgets nearing their limits" width="30%">
 </p>
 
 <sub>Screenshots show the app's built-in fictional demo data.</sub>
@@ -23,8 +25,8 @@ Turn on **Demo data** in the top bar to explore with six months of fictional dat
 ## Features
 
 - **Transactions:** add, edit and delete income and expenses, then search, filter by type, category and date, and sort. Filters are kept in the URL, so a view can be bookmarked.
-- **Dashboard:** income, expenses, net cash flow and savings rate for any month, with recent transactions, budget progress, savings goals and charts.
-- **Budgets:** one overall monthly limit and one per spending category, each shown as _On track_, _Nearing limit_ or _Over budget_.
+- **Overview:** net cash flow for any month, with income, expenses and savings rate, a cash flow chart beside what's left of the monthly budget, recent activity and savings goals.
+- **Budgets:** one overall monthly limit, led by what's left to spend, the days remaining and a daily allowance, plus one limit per spending category. Each is shown as _On track_, _Nearing limit_ or _Over budget_.
 - **Analytics:** income vs expenses, a spending trend and a category breakdown for this month, last month, or the last 3, 6 or 12 months. Every chart has a written summary and a table of the exact figures.
 - **Recurring transactions:** set up salary, rent or subscriptions once. Each payment is added on its due date, including any that fell due while the app was closed. Schedules can be paused, resumed and edited.
 - **Savings goals:** record deposits and withdrawals towards a target, and see how much to save each month to reach it by a date. Saving isn't counted as spending.

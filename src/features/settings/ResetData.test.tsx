@@ -87,7 +87,7 @@ describe('Resetting all data', () => {
 
     await user.click(dialog.getByRole('button', { name: 'Export transactions first' }));
 
-    expect(downloadedNames).toEqual(['finance-tracker-transactions-2026-11-15.csv']);
+    expect(downloadedNames).toEqual(['penceplot-transactions-2026-11-15.csv']);
     // Exporting doesn't close the dialog or delete anything.
     expect(screen.getByRole('dialog', { name: 'Delete all data?' })).toBeVisible();
   });
@@ -105,7 +105,7 @@ describe('Resetting all data', () => {
     expect(repository.backupsCleared).toBe(1);
     expect(localStorage.getItem(STORAGE_KEYS.theme)).toBe('dark');
     expect(router.state.location.pathname).toBe('/');
-    expect(screen.getByRole('heading', { name: 'Welcome to Finance Tracker' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Welcome to PencePlot' })).toBeVisible();
     expect(screen.getByText('All data deleted')).toBeInTheDocument();
   });
 

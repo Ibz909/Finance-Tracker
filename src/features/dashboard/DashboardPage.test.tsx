@@ -58,7 +58,7 @@ describe('Dashboard', () => {
   it('welcomes a new user and offers to add a first transaction', async () => {
     const { user } = renderRoute('/');
 
-    expect(screen.getByRole('heading', { name: 'Welcome to Finance Tracker' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Welcome to PencePlot' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Add your first transaction' }));
     expect(screen.getByRole('dialog', { name: 'Add transaction' })).toBeInTheDocument();
   });
@@ -74,9 +74,7 @@ describe('Dashboard', () => {
   ])('shows the overview, not the welcome, with only %s', (_label, data, section) => {
     renderRoute('/', { repository: createMemoryRepository({ ...createEmptyAppData(), ...data }) });
 
-    expect(
-      screen.queryByRole('heading', { name: 'Welcome to Finance Tracker' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Welcome to PencePlot' })).not.toBeInTheDocument();
     expect(region(section)).toBeVisible();
     expect(region('Recent activity')).toHaveTextContent('No transactions in November 2026.');
   });

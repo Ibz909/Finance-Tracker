@@ -41,7 +41,7 @@ export function DashboardPage() {
     return (
       <EmptyState
         icon={Wallet}
-        title="Welcome to Finance Tracker"
+        title="Welcome to PencePlot"
         description="Add your first income or expense to see your monthly cash flow, savings rate and recent activity here. Or explore with fictional demo data first. Your data stays in this browser."
         action={
           <div className="flex flex-col gap-3 sm:flex-row">

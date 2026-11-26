@@ -14,7 +14,7 @@ const lazyRoutes = createRoutes(lazyPage);
 
 describe('Pages loaded on demand', () => {
   it.each([
-    ['/', 'Welcome to Finance Tracker'],
+    ['/', 'Welcome to PencePlot'],
     ['/transactions', 'No transactions yet'],
     ['/recurring', 'No recurring transactions yet'],
     ['/budgets', 'No budgets yet'],
