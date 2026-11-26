@@ -20,7 +20,7 @@ export interface NavItem {
  * and top-bar title all read from this list, so adding a page is one edit.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/', label: 'Overview', icon: LayoutDashboard },
   { path: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
   { path: '/recurring', label: 'Recurring', icon: Repeat },
   { path: '/budgets', label: 'Budgets', icon: Target },

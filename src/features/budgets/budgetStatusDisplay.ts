@@ -10,19 +10,19 @@ export const STATUS_DISPLAY: Record<
   normal: {
     label: 'On track',
     icon: CircleCheck,
-    classes: 'bg-positive/10 text-positive',
+    classes: 'text-positive',
     bar: 'accent',
   },
   warning: {
     label: 'Nearing limit',
     icon: TriangleAlert,
-    classes: 'bg-warning/15 text-warning',
+    classes: 'text-warning',
     bar: 'warning',
   },
   exceeded: {
     label: 'Over budget',
     icon: CircleAlert,
-    classes: 'bg-negative/10 text-negative',
+    classes: 'text-negative',
     bar: 'negative',
   },
 };

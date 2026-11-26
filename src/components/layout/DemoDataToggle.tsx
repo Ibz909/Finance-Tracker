@@ -34,13 +34,11 @@ export function DemoDataToggle() {
           showToast('Demo data turned on');
         }
       }}
-      className={`inline-flex h-11 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-colors duration-150 sm:h-10 ${
-        on
-          ? 'border-accent/40 bg-accent/10 text-accent hover:bg-accent/15'
-          : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+      className={`inline-flex h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors duration-150 hover:bg-muted sm:h-9 ${
+        on ? 'border-input-border text-foreground' : 'border-border text-muted-foreground'
       }`}
     >
-      <FlaskConical aria-hidden="true" className="size-4 shrink-0" />
+      <FlaskConical aria-hidden="true" className={`size-4 shrink-0 ${on ? 'text-accent' : ''}`} />
       {/* Phones show just the icon and state, to fit beside the title. */}
       <span aria-hidden="true" className="hidden sm:inline">
         Demo data:

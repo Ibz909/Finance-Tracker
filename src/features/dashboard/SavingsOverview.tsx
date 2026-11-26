@@ -27,17 +27,14 @@ export function SavingsOverview({ goals, contributions, today }: SavingsOverview
   const preview = progress.slice(0, PREVIEW_COUNT);
 
   return (
-    <section
-      aria-labelledby="savings-overview-heading"
-      className="min-w-0 self-start rounded-2xl border border-border bg-surface shadow-sm"
-    >
-      <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-4 sm:px-6">
-        <h2 id="savings-overview-heading" className="text-base font-semibold">
+    <section aria-labelledby="savings-overview-heading" className="min-w-0">
+      <div className="flex items-center justify-between gap-4">
+        <h2 id="savings-overview-heading" className="text-lg font-semibold">
           Savings goals
         </h2>
         <Link
           to="/savings"
-          className="inline-flex items-center gap-1 rounded-md text-sm font-medium text-accent hover:underline"
+          className="inline-flex items-center gap-1 rounded-sm text-sm font-medium text-accent hover:underline"
         >
           {progress.length > 0 ? 'All goals' : 'Set up a goal'}
           <ArrowRight aria-hidden="true" className="size-4" />
@@ -45,20 +42,20 @@ export function SavingsOverview({ goals, contributions, today }: SavingsOverview
       </div>
 
       {progress.length === 0 ? (
-        <p className="px-6 py-8 text-center text-sm text-muted-foreground">
+        <p className="mt-3 border-t border-border pt-4 text-sm text-muted-foreground">
           No savings goals yet. Create one to follow your progress here.
         </p>
       ) : (
         <>
-          <p className="px-4 pt-4 text-sm text-muted-foreground sm:px-6">
+          <p className="mt-1 text-sm text-muted-foreground">
             <span className="text-lg font-semibold text-foreground tabular-nums">
               {formatPence(totalSaved)}
             </span>{' '}
             saved across {progress.length} {progress.length === 1 ? 'goal' : 'goals'}
           </p>
-          <ul className="divide-y divide-border">
+          <ul className="mt-3 divide-y divide-border border-t border-border">
             {preview.map(({ goal, savedPence, percent, status }) => (
-              <li key={goal.id} className="space-y-2 px-4 py-3 sm:px-6">
+              <li key={goal.id} className="space-y-2 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="flex min-w-0 items-center gap-2 font-medium">
                     <span className="break-words">{goal.name}</span>

@@ -8,28 +8,18 @@ import { useReportingMonth } from '../../hooks/useReportingMonth';
 import { useToast } from '../../hooks/useToast';
 import { useTransactionDialog } from '../../hooks/useTransactionDialog';
 import { todayIsoDate } from '../../utils/dates';
-import {
-  categoryBreakdown,
-  DEFAULT_RANGE_MONTHS,
-  monthlyTotals,
-  monthsEndingAt,
-} from '../analytics/analytics';
-import {
-  CategoryBreakdownCard,
-  IncomeExpenseCard,
-  SpendingTrendCard,
-} from '../analytics/AnalyticsCharts';
-import { BudgetOverview } from './BudgetOverview';
+import { CashFlowPanel } from './CashFlowPanel';
+import { MonthlyBudgetPanel } from './MonthlyBudgetPanel';
+import { OverviewSummary } from './OverviewSummary';
 import { RecentTransactions } from './RecentTransactions';
 import { SavingsOverview } from './SavingsOverview';
 import { recentTransactions, summariseMonth } from './summary';
-import { SummaryCards } from './SummaryCards';
 
 export function DashboardPage() {
   const { transactions, budgets, recurringSchedules, savingsGoals, goalContributions } =
     useAppData();
   const today = todayIsoDate(useClock()());
-  const { month } = useReportingMonth();
+  const { month, currentMonth } = useReportingMonth();
   const { openAddTransaction } = useTransactionDialog();
   const { loadDemoData } = useDemoDataActions();
   const { showToast } = useToast();
@@ -37,17 +27,6 @@ export function DashboardPage() {
   // Derived, never stored: recalculated only when the data or month changes.
   const summary = useMemo(() => summariseMonth(transactions, month), [transactions, month]);
   const recent = useMemo(() => recentTransactions(transactions, month), [transactions, month]);
-  const trendMonths = useMemo(() => monthsEndingAt(month, DEFAULT_RANGE_MONTHS), [month]);
-  const totals = useMemo(
-    () => monthlyTotals(transactions, trendMonths),
-    [transactions, trendMonths],
-  );
-  // The category chart reflects the selected month only, like the summary cards.
-  const thisMonth = useMemo(() => [month], [month]);
-  const breakdown = useMemo(
-    () => categoryBreakdown(transactions, thisMonth),
-    [transactions, thisMonth],
-  );
 
   // Welcome only someone with nothing set up yet. Budgets, goals or recurring
   // items without transactions still get the dashboard: every section has
@@ -86,21 +65,16 @@ export function DashboardPage() {
     );
   }
 
+  // One answer first, then the trend beside what's left to spend, then detail.
   return (
-    <div className="space-y-6">
-      <SummaryCards summary={summary} month={month} />
-      <RecentTransactions transactions={recent} month={month} />
-      <BudgetOverview budgets={budgets} transactions={transactions} month={month} />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <SpendingTrendCard totals={totals} title="Spending over time" />
-        <IncomeExpenseCard totals={totals} />
-        <CategoryBreakdownCard
-          breakdown={breakdown}
-          months={thisMonth}
-          title="Spending by category"
-        />
-        <SavingsOverview goals={savingsGoals} contributions={goalContributions} today={today} />
+    <div className="space-y-8">
+      <OverviewSummary summary={summary} month={month} isCurrentMonth={month === currentMonth} />
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <CashFlowPanel transactions={transactions} month={month} />
+        <MonthlyBudgetPanel budgets={budgets} transactions={transactions} month={month} />
       </div>
+      <RecentTransactions transactions={recent} month={month} />
+      <SavingsOverview goals={savingsGoals} contributions={goalContributions} today={today} />
     </div>
   );
 }

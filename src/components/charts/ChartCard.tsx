@@ -13,6 +13,8 @@ interface ChartCardProps {
   chart: ReactNode;
   /** Usually a <DataTable />. */
   table?: ReactNode;
+  /** Controls beside the title, e.g. a range picker. */
+  actions?: ReactNode;
   className?: string;
 }
 
@@ -28,6 +30,7 @@ export function ChartCard({
   headingLevel = 2,
   chart,
   table,
+  actions,
   className = '',
 }: ChartCardProps) {
   const titleId = useId();
@@ -36,13 +39,16 @@ export function ChartCard({
   return (
     <section
       aria-labelledby={titleId}
-      className={`min-w-0 rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6 ${className}`}
+      className={`min-w-0 rounded-xl border border-border bg-surface p-4 sm:p-5 ${className}`}
     >
-      <Heading id={titleId} className="text-base font-semibold">
-        {title}
-      </Heading>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <Heading id={titleId} className="text-lg font-semibold">
+          {title}
+        </Heading>
+        {actions}
+      </div>
       {emptyMessage ? (
-        <p className="mt-6 mb-2 rounded-xl bg-muted px-4 py-8 text-center text-sm text-muted-foreground">
+        <p className="mt-5 mb-1 rounded-lg bg-muted px-4 py-8 text-center text-sm text-muted-foreground">
           {emptyMessage}
         </p>
       ) : (
@@ -62,7 +68,7 @@ function ChartSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="h-64 w-full animate-pulse rounded-xl bg-muted motion-reduce:animate-none"
+      className="h-64 w-full animate-pulse rounded-lg bg-muted motion-reduce:animate-none"
     />
   );
 }

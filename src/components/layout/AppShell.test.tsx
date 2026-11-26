@@ -39,9 +39,7 @@ describe('AppShell navigation', () => {
       'aria-current',
       'page',
     );
-    expect(within(nav).getByRole('link', { name: 'Dashboard' })).not.toHaveAttribute(
-      'aria-current',
-    );
+    expect(within(nav).getByRole('link', { name: 'Overview' })).not.toHaveAttribute('aria-current');
   });
 
   it('provides a skip link to the main content', () => {

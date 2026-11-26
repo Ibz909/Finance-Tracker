@@ -44,7 +44,8 @@ const PAIRS: Pair[] = [
   ['Nearing limit / Target date passed badge', token('warning'), tint('warning', 15), TEXT],
   ['accent text on accent tint', token('accent'), tint('accent', 10), TEXT],
   // Buttons
-  ['primary button text', token('accent-foreground'), token('accent'), TEXT],
+  ['primary button text', token('accent-fill-foreground'), token('accent-fill'), TEXT],
+  ['text on accent', token('accent-foreground'), token('accent'), TEXT],
   ['danger button text', token('negative-foreground'), token('negative'), TEXT],
   // Non-text: form field outlines, focus ring, progress bars
   ['form field border on surface', token('input-border'), token('surface'), UI],
@@ -54,7 +55,17 @@ const PAIRS: Pair[] = [
   ['progress fill (accent) on track', token('accent'), token('muted'), UI],
   ['progress fill (warning) on track', token('warning'), token('muted'), UI],
   ['progress fill (negative) on track', token('negative'), token('muted'), UI],
+  // Charts: income and expense bars against the panel
+  ['income bars on surface', token('chart-income'), token('surface'), UI],
+  ['expense bars on surface', token('chart-expense'), token('surface'), UI],
 ];
+
+describe('stylesheet structure', () => {
+  // A second block would silently override the one these checks read.
+  it.each([':root {', '.dark {'])('declares %s exactly once', (selector) => {
+    expect(css.split(selector)).toHaveLength(2);
+  });
+});
 
 describe.each([
   ['light', readTokens(css, ':root')],

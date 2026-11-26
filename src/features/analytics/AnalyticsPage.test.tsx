@@ -109,16 +109,11 @@ describe('Analytics page', () => {
   });
 });
 
-describe('Dashboard charts', () => {
-  it('shows live chart cards alongside the savings goals panel', () => {
+describe('Overview chart', () => {
+  it('shows the cash flow chart over the last six months, with the savings goals section', () => {
     renderRoute('/', { repository: seeded(...data) });
 
-    expect(region('Spending over time')).toHaveTextContent('Highest spending: November 2026');
-    expect(region('Income vs expenses')).toHaveTextContent('Jun – Nov 2026');
-    // The category chart follows the selected month only, like the summary cards.
-    expect(region('Spending by category')).toHaveTextContent(
-      '£1,500.00 spent across 2 categories in November 2026.',
-    );
+    expect(region('Cash flow')).toHaveTextContent('Jun – Nov 2026');
     expect(region('Savings goals')).toHaveTextContent('No savings goals yet');
   });
 });

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { ChartCard } from '../../components/charts/ChartCard';
 import { DataTable } from '../../components/charts/DataTable';
 import {
@@ -27,18 +28,24 @@ interface MonthlyProps {
   totals: readonly MonthTotals[];
   headingLevel?: 2 | 3;
   title?: string;
+  actions?: ReactNode;
+  className?: string;
 }
 
 export function IncomeExpenseCard({
   totals,
   headingLevel,
   title = 'Income vs expenses',
+  actions,
+  className,
 }: MonthlyProps) {
   const empty = totals.every((t) => t.incomePence === 0 && t.expensesPence === 0);
   return (
     <ChartCard
       title={title}
       headingLevel={headingLevel}
+      actions={actions}
+      className={className}
       summary={incomeExpenseSummary(totals)}
       emptyMessage={
         empty ? `No income or spending in ${rangeLabel(totals.map((t) => t.month))}.` : undefined

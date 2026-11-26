@@ -78,23 +78,26 @@ describe('Loading demo data', () => {
 
     await user.click(screen.getByRole('button', { name: 'Explore with demo data' }));
 
-    expect(screen.getByText('You’re viewing fictional demo data.')).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Income' })).not.toHaveTextContent('£0.00');
-    const recent = screen.getByRole('region', { name: 'Recent transactions' });
-    for (const row of within(recent).getAllByRole('listitem')) {
-      expect(within(row).getByText('Demo')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Manage demo data' })).toBeInTheDocument();
+    expect(screen.getByText('Income', { selector: 'dt' }).parentElement).not.toHaveTextContent(
+      '£0.00',
+    );
+    const recent = screen.getByRole('region', { name: 'Recent activity' });
+    const rows = within(recent).getAllByRole('row').slice(1);
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row).toHaveTextContent('· Demo');
     }
   });
 
   it('shows the demo banner everywhere except Settings', async () => {
     const { user } = renderRoute('/settings', { repository: withRealData() });
     await user.click(screen.getByRole('button', { name: 'Load demo data' }));
-    expect(screen.queryByText('You’re viewing fictional demo data.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Manage demo data' })).not.toBeInTheDocument();
 
     const nav = screen.getByRole('navigation', { name: 'Primary' });
     await user.click(within(nav).getByRole('link', { name: 'Transactions' }));
 
-    expect(screen.getByText('You’re viewing fictional demo data.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Manage demo data' })).toHaveAttribute(
       'href',
       '/settings#demo-data',

@@ -49,14 +49,25 @@ export function over(color: Rgb, alpha: number, background: Rgb): Rgb {
   ) as unknown as Rgb;
 }
 
-/** Reads `--name: oklch(...)` declarations from a CSS block such as `:root { … }`. */
+/** Converts `#rrggbb` (or `#rgb`) to sRGB. */
+export function hexToRgb(value: string): Rgb {
+  const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value.trim());
+  if (!match?.[1]) throw new Error(`Not a hex colour: ${value}`);
+  const digits = match[1];
+  const hex = digits.length === 3 ? digits.replace(/./g, '$&$&') : digits;
+  return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as unknown as Rgb;
+}
+
+/** Reads `--name: oklch(...)` or `--name: #hex` declarations from a block such as `:root { … }`. */
 export function readTokens(css: string, selector: ':root' | '.dark'): Record<string, Rgb> {
   const start = css.indexOf(`${selector} {`);
   if (start === -1) throw new Error(`No ${selector} block`);
   const block = css.slice(start, css.indexOf('}', start));
   const tokens: Record<string, Rgb> = {};
-  for (const [, name, value] of block.matchAll(/--([\w-]+):\s*(oklch\([^)]*\))/g)) {
-    if (name && value) tokens[name] = oklchToRgb(value);
+  for (const [, name, value] of block.matchAll(
+    /--([\w-]+):\s*(oklch\([^)]*\)|#[0-9a-fA-F]{3,6})\b/g,
+  )) {
+    if (name && value) tokens[name] = value.startsWith('#') ? hexToRgb(value) : oklchToRgb(value);
   }
   return tokens;
 }

@@ -64,7 +64,7 @@ describe('Demo data switch', () => {
     expect(saved).toContainEqual(realTransaction);
     expect(saved.filter((t) => t.isDemo)).toHaveLength(DEMO_COUNT);
     expect(notifications()).toHaveTextContent('Demo data turned on');
-    expect(screen.getByText('You’re viewing fictional demo data.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Manage demo data' })).toBeInTheDocument();
   });
 
   it('is on when demo data is already loaded, and turning it off removes only demo data', async () => {
@@ -80,7 +80,7 @@ describe('Demo data switch', () => {
     expect(demoSwitch()).not.toBeChecked();
     expect(repository.load().data.transactions).toEqual([realTransaction]);
     expect(notifications()).toHaveTextContent('Demo data turned off');
-    expect(screen.queryByText('You’re viewing fictional demo data.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Manage demo data' })).not.toBeInTheDocument();
   });
 
   it('works from the keyboard', async () => {

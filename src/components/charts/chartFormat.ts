@@ -20,8 +20,8 @@ export function formatTooltipPence(value: unknown): string {
  * dark mode without re-rendering.
  */
 export const CHART_COLORS = {
-  income: 'var(--positive)',
-  expenses: 'var(--chart-2)',
+  income: 'var(--chart-income)',
+  expenses: 'var(--chart-expense)',
   spending: 'var(--accent)',
   grid: 'var(--border)',
   axis: 'var(--muted-foreground)',
@@ -31,7 +31,7 @@ export const TOOLTIP_STYLE = {
   contentStyle: {
     background: 'var(--surface)',
     border: '1px solid var(--border)',
-    borderRadius: '0.75rem',
+    borderRadius: '6px',
     color: 'var(--foreground)',
     fontSize: '0.875rem',
   },
