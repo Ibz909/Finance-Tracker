@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { createEmptyAppData } from '../../models/appData';
 import type { RecurringSchedule } from '../../models/recurring';
 import { createMemoryRepository } from '../../services/storage/memoryRepository';
-import { makeSchedule } from '../../test/fixtures';
+import { makeSchedule, makeTransaction } from '../../test/fixtures';
 import { renderRoute } from '../../test/renderRoute';
 
 // renderRoute fixes "today" at 15 November 2026.
@@ -30,6 +30,11 @@ async function fillForm(
   await user.type(dialog.getByLabelText('Description'), 'Rent');
   await user.clear(dialog.getByLabelText('First payment'));
   await user.type(dialog.getByLabelText('First payment'), startDate);
+}
+
+async function rowAction(user: UserEvent, name: string, action: string) {
+  await user.click(screen.getByRole('button', { name: `Actions for ${name}` }));
+  await user.click(screen.getByRole('menuitem', { name: action }));
 }
 
 describe('Recurring page', () => {
@@ -88,12 +93,12 @@ describe('Recurring page', () => {
       repository: seeded(makeSchedule({ description: 'Gym', nextDueDate: '2026-12-01' })),
     });
 
-    await user.click(screen.getByRole('button', { name: 'Pause Gym' }));
+    await rowAction(user, 'Gym', 'Pause');
     expect(
       within(screen.getByRole('region', { name: 'Paused or ended' })).getByText('Paused'),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Resume Gym' }));
+    await rowAction(user, 'Gym', 'Resume');
     expect(
       within(screen.getByRole('region', { name: 'Active' })).getByText('Next 1 Dec 2026'),
     ).toBeInTheDocument();
@@ -105,7 +110,7 @@ describe('Recurring page', () => {
     );
     const { user } = renderRoute('/recurring', { repository });
 
-    await user.click(screen.getByRole('button', { name: 'Edit Gym' }));
+    await rowAction(user, 'Gym', 'Edit');
     const dialog = within(screen.getByRole('dialog', { name: 'Edit recurring transaction' }));
     await user.clear(dialog.getByLabelText('Amount'));
     await user.type(dialog.getByLabelText('Amount'), '40');
@@ -121,7 +126,7 @@ describe('Recurring page', () => {
     const repository = seeded(makeSchedule({ description: 'Gym', nextDueDate: '2026-11-01' }));
     const { user } = renderRoute('/recurring', { repository });
 
-    await user.click(screen.getByRole('button', { name: 'Delete Gym' }));
+    await rowAction(user, 'Gym', 'Delete');
     await user.click(screen.getByRole('button', { name: 'Delete recurring transaction' }));
 
     expect(repository.saved?.recurringSchedules).toEqual([]);
@@ -155,5 +160,106 @@ describe('Catching up when the app opens', () => {
   it('says nothing when no payment was due', () => {
     renderRoute('/', { repository: seeded(makeSchedule({ nextDueDate: '2026-12-01' })) });
     expect(screen.queryByText(/were added/)).not.toBeInTheDocument();
+  });
+});
+
+describe('Recurring overview', () => {
+  const rent = makeSchedule({
+    id: 'rent',
+    description: 'Rent',
+    amountPence: 95000,
+    startDate: '2026-09-01',
+    nextDueDate: '2026-12-01',
+  });
+  const salary = makeSchedule({
+    id: 'salary',
+    type: 'income',
+    categoryId: 'salary',
+    description: 'Salary',
+    amountPence: 265000,
+    startDate: '2026-09-28',
+    nextDueDate: '2026-11-28',
+  });
+  const paused = makeSchedule({
+    id: 'gym',
+    description: 'Gym',
+    amountPence: 3000,
+    startDate: '2026-09-20',
+    nextDueDate: '2026-11-20',
+    paused: true,
+  });
+  const repository = () =>
+    createMemoryRepository({
+      ...createEmptyAppData(),
+      recurringSchedules: [rent, salary, paused],
+      transactions: [
+        makeTransaction({
+          description: 'Rent',
+          amountPence: 95000,
+          date: '2026-11-01',
+          categoryId: 'rent_housing',
+          recurringScheduleId: 'rent',
+        }),
+      ],
+    });
+
+  it('sums the month: paid so far plus still to come, never a paused item', () => {
+    renderRoute('/recurring', { repository: repository() });
+
+    const summary = screen.getByLabelText('Recurring money, November 2026');
+    expect(summary).toHaveTextContent('Recurring income£2,650.001 due');
+    expect(summary).toHaveTextContent('Recurring expenses£950.001 paid');
+    expect(summary).not.toHaveTextContent('Net recurring');
+    expect(summary).toHaveTextContent('Active items21 paused or ended');
+  });
+
+  it('marks payment days on the calendar and lists a chosen day’s payments', async () => {
+    const { user } = renderRoute('/recurring', { repository: repository() });
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Today, Sunday 15 November 2026' }),
+    ).toBeVisible();
+    expect(screen.getByText('No recurring payments on this day.')).toBeVisible();
+
+    await user.click(
+      screen.getByRole('button', { name: 'Sunday 1 November 2026, 1 payment, £950.00 out' }),
+    );
+    const day = within(screen.getByRole('region', { name: 'Sunday 1 November 2026' }));
+    expect(day.getByText('Rent')).toBeVisible();
+    expect(day.getByText('Paid')).toBeVisible();
+    expect(day.getByText('Rent & Housing · Monthly')).toBeVisible();
+  });
+
+  it('follows the shared month, and the summary follows the calendar', async () => {
+    const { user } = renderRoute('/recurring', { repository: repository() });
+
+    await user.click(screen.getByRole('button', { name: 'Next month, December 2026' }));
+
+    expect(screen.getByRole('grid', { name: 'Recurring payments, December 2026' })).toBeVisible();
+    // Outside the current month the first payment day is chosen.
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Tuesday 1 December 2026' }),
+    ).toBeVisible();
+    expect(screen.getByLabelText('Recurring money, December 2026')).toHaveTextContent(
+      'Recurring income£2,650.00',
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Primary' });
+    await user.click(within(nav).getByRole('link', { name: 'Overview' }));
+    expect(
+      screen.getByRole('region', { name: 'Net cash flow, December 2026' }),
+    ).toBeInTheDocument();
+  });
+
+  it('lists what is coming up next, soonest first', () => {
+    renderRoute('/recurring', { repository: repository() });
+
+    const upcoming = within(screen.getByRole('region', { name: 'Upcoming' }));
+    const rows = upcoming.getAllByRole('listitem').map((row) => row.textContent);
+    expect(rows.slice(0, 3)).toEqual([
+      'Sat 28 NovSalarySalary · Monthly+£2,650.00, income',
+      'Tue 1 DecRentRent & Housing · Monthly−£950.00, expense',
+      'Mon 28 DecSalarySalary · Monthly+£2,650.00, income',
+    ]);
   });
 });

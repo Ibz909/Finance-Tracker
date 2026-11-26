@@ -112,12 +112,16 @@ describe('Demo recurring schedules', () => {
 
     const nav = screen.getByRole('navigation', { name: 'Primary' });
     await user.click(within(nav).getByRole('link', { name: 'Recurring' }));
-    const rows = within(screen.getByRole('main')).getAllByRole('listitem');
+    const rows = within(screen.getByRole('region', { name: 'All recurring' })).getAllByRole(
+      'listitem',
+    );
     expect(rows).toHaveLength(DEMO_SCHEDULE_COUNT);
     for (const row of rows) {
-      expect(within(row).getByText('Demo')).toBeInTheDocument();
+      expect(row).toHaveTextContent('· Demo');
     }
-    expect(screen.getByRole('button', { name: 'Resume Video streaming' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Actions for Video streaming' }));
+    expect(screen.getByRole('menuitem', { name: 'Resume' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
 
     await user.click(within(nav).getByRole('link', { name: 'Settings' }));
     await user.click(within(demoSection()).getByRole('button', { name: 'Clear demo data' }));

@@ -1,6 +1,5 @@
-import { Pause, Pencil, Play, Trash2 } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
+import { RowMenu } from '../../components/ui/RowMenu';
 import { getCategory } from '../../constants/categories';
 import type { RecurringSchedule } from '../../models/recurring';
 import { formatSignedPence } from '../../utils/money';
@@ -16,7 +15,7 @@ interface RecurringListProps {
 
 export function RecurringList({ schedules, ...actions }: RecurringListProps) {
   return (
-    <ul className="divide-y divide-border">
+    <ul className="divide-y divide-border border-y border-border">
       {schedules.map((schedule) => (
         <RecurringRow key={schedule.id} schedule={schedule} {...actions} />
       ))}
@@ -24,6 +23,11 @@ export function RecurringList({ schedules, ...actions }: RecurringListProps) {
   );
 }
 
+/**
+ * One recurring item as an open row: what it is and how often, when it's
+ * next due (or that it's paused or ended, in words), the signed amount, and
+ * its actions behind one menu.
+ */
 function RecurringRow({
   schedule,
   onEdit,
@@ -35,73 +39,60 @@ function RecurringRow({
   const ended = schedule.nextDueDate === null;
 
   return (
-    <li className="flex flex-wrap items-center gap-x-3 px-4 py-3 sm:flex-nowrap sm:gap-4 sm:px-6">
+    <li className="flex items-center gap-3 py-3">
       <CategoryIcon categoryId={categoryId} />
 
       <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
-          <span className="min-w-0 break-words">{description}</span>
-          {isDemo && (
-            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-              Demo
-            </span>
-          )}
-        </p>
+        <p className="font-medium break-words">{description}</p>
         <p className="text-sm text-muted-foreground">
-          {getCategory(categoryId)?.label ?? 'Unknown category'} · {FREQUENCY_LABELS[frequency]} ·{' '}
-          <span className={paused && !ended ? 'font-medium text-warning' : undefined}>
-            {scheduleStatusText(schedule)}
-          </span>
+          {getCategory(categoryId)?.label ?? 'Unknown category'} · {FREQUENCY_LABELS[frequency]}
+          {isDemo && ' · Demo'}
         </p>
       </div>
 
       <div className="shrink-0 text-right">
         <p
-          className={`font-semibold tabular-nums ${isIncome ? 'text-positive' : 'text-foreground'}`}
+          className={`font-semibold whitespace-nowrap ${isIncome ? 'text-positive' : 'text-foreground'}`}
         >
           {formatSignedPence(amountPence, isIncome ? 'in' : 'out')}
+          <span className="sr-only">{isIncome ? ', income' : ', expense'}</span>
         </p>
-        <p className="text-xs text-muted-foreground">{isIncome ? 'Income' : 'Expense'}</p>
+        <p
+          className={`text-xs whitespace-nowrap ${paused && !ended ? 'font-medium text-warning' : 'text-muted-foreground'}`}
+        >
+          {scheduleStatusText(schedule)}
+        </p>
       </div>
 
-      <div className="-mb-2 flex shrink-0 basis-full justify-end sm:mb-0 sm:basis-auto">
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={`Edit ${description}`}
-          onClick={() => {
-            onEdit(schedule);
-          }}
-        >
-          <Pencil aria-hidden="true" className="size-4" />
-        </Button>
-        {!ended && (
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`${paused ? 'Resume' : 'Pause'} ${description}`}
-            onClick={() => {
-              onTogglePaused(schedule);
-            }}
-          >
-            {paused ? (
-              <Play aria-hidden="true" className="size-4" />
-            ) : (
-              <Pause aria-hidden="true" className="size-4" />
-            )}
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hover:text-negative"
-          aria-label={`Delete ${description}`}
-          onClick={() => {
-            onDelete(schedule);
-          }}
-        >
-          <Trash2 aria-hidden="true" className="size-4" />
-        </Button>
+      <div className="-mr-1 shrink-0">
+        <RowMenu
+          label={`Actions for ${description}`}
+          items={[
+            {
+              label: 'Edit',
+              onSelect: () => {
+                onEdit(schedule);
+              },
+            },
+            ...(ended
+              ? []
+              : [
+                  {
+                    label: paused ? 'Resume' : 'Pause',
+                    onSelect: () => {
+                      onTogglePaused(schedule);
+                    },
+                  },
+                ]),
+            {
+              label: 'Delete',
+              destructive: true,
+              onSelect: () => {
+                onDelete(schedule);
+              },
+            },
+          ]}
+        />
       </div>
     </li>
   );
