@@ -46,7 +46,8 @@ describe('Demo data switch', () => {
     renderRoute('/');
 
     const theme = screen.getByRole('button', { name: /^Switch to (light|dark) theme$/ });
-    expect(demoSwitch().nextElementSibling).toBe(theme);
+    // The theme button sits in a wrapper that hides it on the narrowest phones.
+    expect(demoSwitch().nextElementSibling).toContainElement(theme);
   });
 
   it('turns demo data on without touching real data', async () => {

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  addDaysToIsoDate,
+  formatDayHeading,
   currentMonthKey,
   formatDisplayDate,
   formatMonthLabel,
@@ -161,5 +163,40 @@ describe('British Summer Time', () => {
     const earlyMorning = new Date(2026, 3, 1, 0, 15); // 00:15 BST on 1 April
     expect(todayIsoDate(earlyMorning)).toBe('2026-04-01');
     expect(currentMonthKey(earlyMorning)).toBe('2026-04');
+  });
+});
+
+describe('formatDayHeading', () => {
+  it('says Today and Yesterday, including across a month and year end', () => {
+    expect(formatDayHeading('2026-11-26', '2026-11-26').long).toBe('Today');
+    expect(formatDayHeading('2026-11-30', '2026-12-01').long).toBe('Yesterday');
+    expect(formatDayHeading('2026-12-31', '2027-01-01').short).toBe('Yesterday');
+  });
+
+  it('gives the weekday and date otherwise, with a shorter form and a full one', () => {
+    expect(formatDayHeading('2026-11-25', '2026-11-27')).toEqual({
+      long: 'Wed 25 Nov 2026',
+      short: 'Wed 25 Nov',
+      full: 'Wednesday 25 November 2026',
+    });
+  });
+
+  it('handles a leap day and the day after it', () => {
+    expect(formatDayHeading('2028-02-29', '2028-03-10').long).toBe('Tue 29 Feb 2028');
+    expect(formatDayHeading('2028-02-29', '2028-03-01').long).toBe('Yesterday');
+  });
+
+  it('counts days by the calendar across the UK clock changes', () => {
+    // Clocks go back on 25 October 2026 and forward on 29 March 2026.
+    expect(formatDayHeading('2026-10-25', '2026-10-26').long).toBe('Yesterday');
+    expect(formatDayHeading('2026-03-29', '2026-03-30').long).toBe('Yesterday');
+  });
+});
+
+describe('addDaysToIsoDate', () => {
+  it('moves by calendar days across month, year and clock-change boundaries', () => {
+    expect(addDaysToIsoDate('2026-12-31', 1)).toBe('2027-01-01');
+    expect(addDaysToIsoDate('2028-03-01', -1)).toBe('2028-02-29');
+    expect(addDaysToIsoDate('2026-10-24', 2)).toBe('2026-10-26');
   });
 });

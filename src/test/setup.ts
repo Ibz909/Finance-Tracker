@@ -59,3 +59,9 @@ if (!window.ResizeObserver) {
   };
 }
 /* eslint-enable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/no-deprecated */
+
+// jsdom has no layout, so no scrollIntoView; browsers always do.
+const elementProto = Element.prototype as Partial<Pick<Element, 'scrollIntoView'>>;
+elementProto.scrollIntoView ??= () => {
+  /* no-op in tests */
+};
