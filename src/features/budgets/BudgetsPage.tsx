@@ -2,19 +2,23 @@ import { Plus, Target } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { useAppData } from '../../hooks/useAppData';
+import { useAppData, useClock } from '../../hooks/useAppData';
 import { useReportingMonth } from '../../hooks/useReportingMonth';
 import type { Budget } from '../../models/budget';
-import { formatMonthLabel } from '../../utils/dates';
-import { BudgetCard } from './BudgetCard';
+import { formatMonthLabel, todayIsoDate } from '../../utils/dates';
+import { monthTiming } from './allowance';
 import type { BudgetDialogState } from './BudgetFormDialog';
 import { BudgetFormDialog } from './BudgetFormDialog';
 import { getMonthBudgets } from './budgetProgress';
+import { CategoryBudgetRow } from './CategoryBudgetRow';
 import { DeleteBudgetDialog } from './DeleteBudgetDialog';
+import { MonthlyBudgetHero } from './MonthlyBudgetHero';
 
 export function BudgetsPage() {
   const { budgets, transactions } = useAppData();
   const { month } = useReportingMonth();
+  const today = todayIsoDate(useClock()());
+  const timing = useMemo(() => monthTiming(month, today), [month, today]);
   const [dialog, setDialog] = useState<BudgetDialogState>({ mode: 'closed' });
   const [pendingDelete, setPendingDelete] = useState<Budget | null>(null);
 
@@ -48,47 +52,47 @@ export function BudgetsPage() {
           }
         />
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
               Spending against your limits in {formatMonthLabel(month)}.
             </p>
-            <Button onClick={openAdd}>
+            <Button variant="secondary" onClick={openAdd}>
               <Plus aria-hidden="true" className="size-5" />
               Add budget
             </Button>
           </div>
 
-          <section aria-labelledby="overall-budget-heading" className="space-y-3">
-            <h2 id="overall-budget-heading" className="text-base font-semibold">
-              Monthly budget
-            </h2>
-            {overall ? (
-              <BudgetCard progress={overall} {...cardActions} />
-            ) : (
-              <p className="rounded-2xl border border-dashed border-border px-5 py-4 text-sm text-muted-foreground">
-                No overall limit set. Add one to cap all of your spending each month.
-              </p>
-            )}
-          </section>
+          {overall ? (
+            <MonthlyBudgetHero progress={overall} month={month} timing={timing} {...cardActions} />
+          ) : (
+            <section
+              aria-label="Monthly budget"
+              className="rounded-xl border border-dashed border-input-border px-4 py-4 text-sm text-muted-foreground sm:px-5"
+            >
+              No overall limit set. Add one to cap all of your spending each month.
+            </section>
+          )}
 
-          <section aria-labelledby="category-budgets-heading" className="space-y-3">
-            <div>
-              <h2 id="category-budgets-heading" className="text-base font-semibold">
-                Category budgets
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Each is a separate limit for one category. They aren’t added to your monthly budget.
-              </p>
-            </div>
+          <section aria-labelledby="category-budgets-heading">
+            <h2 id="category-budgets-heading" className="text-lg font-semibold">
+              Category budgets
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Each is a separate limit for one category. They aren’t added to your monthly budget.
+            </p>
             {categories.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <ul className="mt-2 divide-y divide-border border-y border-border">
                 {categories.map((progress) => (
-                  <BudgetCard key={progress.budget.id} progress={progress} {...cardActions} />
+                  <CategoryBudgetRow
+                    key={progress.budget.id}
+                    progress={progress}
+                    {...cardActions}
+                  />
                 ))}
-              </div>
+              </ul>
             ) : (
-              <p className="rounded-2xl border border-dashed border-border px-5 py-4 text-sm text-muted-foreground">
+              <p className="mt-3 border-t border-border pt-4 text-sm text-muted-foreground">
                 No category budgets yet.
               </p>
             )}
