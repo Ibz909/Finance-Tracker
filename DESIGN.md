@@ -1,17 +1,17 @@
 ---
-name: Finance Tracker
-description: A private, accessible personal finance tracker for everyday UK users. Premium, minimalist fintech with figures first.
+name: PencePlot
+description: Your money, in focus. A private, accessible personal finance tracker for everyday UK users. Premium, minimalist fintech with figures first.
 ---
 
-<!-- SEED: design direction set by the owner on 2026-11-26, before the redesign is implemented. The current code still uses the previous look (Inter, softer radii, pill badges). Values below are targets, not yet tokens in code. Re-run /impeccable document once the redesign is built, so the frontmatter carries the real tokens and the sidecar is generated. -->
+<!-- SEED: design direction set by the owner on 2026-11-26. The theme tokens, Geist and the shared components are now built, and the Overview and Budgets pages are redesigned (PR #29); Transactions, Recurring, Analytics, Savings Goals and Settings still have their earlier layouts. Re-run /impeccable document once every page is redesigned, so the frontmatter carries the real tokens and the sidecar is generated. -->
 
-# Design System: Finance Tracker
+# Design System: PencePlot
 
 ## Overview
 
 **Creative North Star: "The Quiet Ledger"**
 
-Finance Tracker should feel like a well-kept ledger on a dark desk: precise, calm and private. The numbers are the hero. Each screen leads with the one figure that answers the user's question ("How much can I still spend?", "Did I earn more than I spent?"). Supporting figures sit compactly beneath it, and detail follows as open rows and tables rather than boxes. It's premium through restraint and craft: exact alignment, tabular figures, a disciplined colour vocabulary and nothing decorative. It shouldn't rely on effects.
+PencePlot should feel like a well-kept ledger on a dark desk: precise, calm and private. The numbers are the hero. Each screen leads with the one figure that answers the user's question ("How much can I still spend?", "Did I earn more than I spent?"). Supporting figures sit compactly beneath it, and detail follows as open rows and tables rather than boxes. It's premium through restraint and craft: exact alignment, tabular figures, a disciplined colour vocabulary and nothing decorative. It shouldn't rely on effects.
 
 The references set the craft bar, not the look to copy: Copilot Money (figure-led finance screens), Linear (density, crisp hierarchy, quiet chrome) and Monzo (approachable, plain-spoken money language). The app must stay recognisably its own: turquoise on near-black, open rows and a circular budget gauge as its signature.
 
@@ -37,6 +37,15 @@ It's sophisticated but approachable, modern without trendiness, compact without 
   - a hero panel with the prominent amount available to spend, days remaining, and a circular "% used" gauge on the right
   - a hairline divider, then three compact metrics (budget, spent, daily allowance)
   - category budgets as open rows: icon tile, name, "£spent of £limit", percentage, an overflow menu, a full-width thin progress bar, and the amount remaining
+
+### Brand identity
+
+- **Name:** PencePlot, written "PencePlot" in prose, titles and metadata.
+- **Wordmark:** "penceplot" in lowercase, Geist semibold at 16px with slight negative tracking (−0.01em), in primary text. It's the only place the lowercase form is used, and screen readers hear "PencePlot".
+- **Tagline:** "Your money, in focus." in 12px secondary text directly under the wordmark, and in the page metadata. Keep the wording and full stop exactly.
+- **Mark:** a plotted line rising through three points into a solid focus dot at its last point, in near-black (#101113) on a Signature Turquoise tile with 6–7px corners. In the app it's drawn in the current text colour (`LogoMark` in `src/components/layout/Logo.tsx`). The favicon (`public/favicon.svg`) is the same drawing with fixed colours, so it reads on light and dark browser chrome alike.
+- **Browser title:** "PencePlot | Personal Finance", with each page's name in front ("Budgets · PencePlot | Personal Finance").
+- **Restraint:** the brand appears once, in the sidebar (or the mobile menu). Pages never repeat the logo, add brand colour washes or decorate headings with the mark. There's no marketing landing page.
 
 ## Colors
 
@@ -99,7 +108,7 @@ Light mode must feel like the same product in daylight, not a different theme.
 **Font:** Geist (UI and figures), falling back to `ui-sans-serif, system-ui, sans-serif`.
 **Figures:** Geist with `font-variant-numeric: tabular-nums`, so columns of money line up digit for digit.
 
-> **Dependency note:** Geist isn't installed. The current app uses Inter (installed through Fontsource). Adding Geist (for example the Fontsource Geist package) is a new dependency and **needs the owner's approval** before implementation. Until it's approved, the type rules below apply to Inter.
+> **Installed:** Geist comes from the Fontsource Geist package (owner-approved), self-hosted with no external font requests.
 
 **Character:** one neutral, engineered sans for everything. Hierarchy comes from size, weight and colour, never from mixing families.
 
@@ -260,17 +269,11 @@ Rows are separated by hairlines, not boxed.
 - **Don't** rely on colour alone for any status, or show a percentage, gauge or bar without its value in text.
 - **Don't** change financial calculations, data models, storage or demo data controls as part of a design change. New figures need the owner's approval first (see below).
 
-## Open decisions (need the owner's approval before implementation)
+## Decisions made
 
-- **Geist font:** a new dependency. Until it's approved, use Inter.
-- **"Daily allowance" and "days remaining this month"** (Budgets reference): these are new derived figures (remaining ÷ days left), not existing calculations. Adding them changes product behaviour, so they need approval and their own tested logic. The rounding rule also needs deciding.
-- **Copy changes seen in the references:**
-  - "Overview" for Dashboard
-  - "+ New budget" for "Add budget"
-  - "Demo mode" for the "Demo data" switch
-  - "Available to spend" and "Remaining to spend" wording
-
-  Keep the current wording until each change is approved.
-
-- **Light-mode values:** proposed above. They must pass `src/styles/themeContrast.test.ts` when implemented.
-- **Positive colour:** this direction merges the separate green into turquoise. Confirm this when implementing, since it changes the "Goal reached" and "On track" colour.
+- **Geist font:** approved and installed, replacing Inter.
+- **Daily allowance and days remaining:** approved. They're computed in `src/features/budgets/allowance.ts`, rounding the allowance down to the penny so it never adds up to more than is left.
+- **"Overview"** replaces "Dashboard" (approved). "Add budget" and the "Demo data" switch keep their wording.
+- **Positive colour:** turquoise, approved, with no separate green.
+- **Light-mode values:** built as proposed, and checked by `src/styles/themeContrast.test.ts`.
+- **Brand:** PencePlot, "Your money, in focus." (see Brand identity).
