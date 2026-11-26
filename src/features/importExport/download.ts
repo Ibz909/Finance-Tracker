@@ -22,5 +22,5 @@ export function downloadTextFile(fileName: string, text: string, type = 'text/cs
 }
 
 export function exportFileName(today: IsoDate): string {
-  return `finance-tracker-transactions-${today}.csv`;
+  return `penceplot-transactions-${today}.csv`;
 }

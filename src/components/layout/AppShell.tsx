@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigation } from 'react-router';
-import { APP_NAME, getPageTitle } from '../../constants/navigation';
+import { APP_TITLE, getPageTitle } from '../../constants/navigation';
 import { DemoDataBanner } from './DemoDataBanner';
 import { MobileNav } from './MobileNav';
 import { RecurringCatchUpNotice } from './RecurringCatchUpNotice';
@@ -20,7 +20,8 @@ export function AppShell() {
   }, []);
 
   useEffect(() => {
-    document.title = `${title} · ${APP_NAME}`;
+    // The page name first keeps tabs and screen-reader titles distinct per page.
+    document.title = `${title} · ${APP_TITLE}`;
   }, [title]);
 
   return (

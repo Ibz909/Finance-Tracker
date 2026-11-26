@@ -27,7 +27,7 @@ describe('AppShell navigation', () => {
 
       expect(router.state.location.pathname).toBe(path);
       expect(screen.getByRole('heading', { level: 1, name: label })).toBeInTheDocument();
-      expect(document.title).toBe(`${label} · Finance Tracker`);
+      expect(document.title).toBe(`${label} · PencePlot | Personal Finance`);
     },
   );
 
@@ -93,5 +93,16 @@ describe('Unknown routes', () => {
     await user.click(screen.getByRole('link', { name: 'Back to dashboard' }));
 
     expect(router.state.location.pathname).toBe('/');
+  });
+});
+
+describe('Branding', () => {
+  it('shows the PencePlot wordmark and tagline, with the proper name for screen readers', () => {
+    renderRoute('/');
+    const sidebar = screen.getByRole('complementary');
+
+    expect(within(sidebar).getByText('penceplot')).toHaveAttribute('aria-hidden', 'true');
+    expect(within(sidebar).getByText('PencePlot')).toHaveClass('sr-only');
+    expect(within(sidebar).getByText('Your money, in focus.')).toBeInTheDocument();
   });
 });

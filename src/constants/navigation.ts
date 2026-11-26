@@ -29,7 +29,10 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
-export const APP_NAME = 'Finance Tracker';
+export const APP_NAME = 'PencePlot';
+export const APP_TAGLINE = 'Your money, in focus.';
+/** The browser tab title's brand part; each page adds its own name in front. */
+export const APP_TITLE = `${APP_NAME} | Personal Finance`;
 
 export function getPageTitle(pathname: string): string {
   const normalised = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;

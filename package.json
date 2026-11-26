@@ -1,8 +1,8 @@
 {
-  "name": "finance-tracker",
+  "name": "penceplot",
   "private": true,
   "version": "0.1.0",
-  "description": "A modern personal finance tracker built with React, TypeScript and Tailwind CSS.",
+  "description": "PencePlot: your money, in focus. A private, accessible personal finance tracker built with React, TypeScript and Tailwind CSS.",
   "type": "module",
   "engines": {
     "node": ">=20"
