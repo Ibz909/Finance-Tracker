@@ -143,7 +143,8 @@ function TransactionRow({
       </td>
       <td className="py-1 pl-1 text-right">
         <RowMenu
-          label={`Actions for ${description}`}
+          // The date tells apart rows with the same description.
+          label={`Actions for ${description}, ${formatDisplayDate(date)}`}
           items={[
             { label: 'Edit', onSelect: onEdit },
             { label: 'Delete', onSelect: onDelete, destructive: true },

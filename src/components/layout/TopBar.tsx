@@ -44,7 +44,10 @@ export function TopBar({ title, isMenuOpen, onOpenMenu }: TopBarProps) {
       )}
       <div className="ml-auto flex shrink-0 items-center gap-1">
         <DemoDataToggle />
-        <ThemeToggle />
+        {/* Below 400px the title needs the room; Settings → Appearance still changes the theme. */}
+        <div className="hidden min-[400px]:block">
+          <ThemeToggle />
+        </div>
         <Button onClick={openAddTransaction} className="ml-1 px-3 sm:px-4">
           <Plus aria-hidden="true" className="size-5" />
           {/* Visually hidden on phones, but always the button's accessible name. */}

@@ -1,4 +1,4 @@
-import { addMonths, endOfMonth, format, isValid, parse } from 'date-fns';
+import { addDays, addMonths, endOfMonth, format, isValid, parse } from 'date-fns';
 
 /**
  * Calendar dates are stored as `YYYY-MM-DD` strings and reporting months as
@@ -90,4 +90,25 @@ export function nowIsoDateTime(now: Date = new Date()): string {
 /** "2026-11" → "Nov" (or "Nov 2026" with the year), for chart axes. */
 export function formatShortMonth(month: MonthKey, withYear = false): string {
   return format(parseIsoDate(`${month}-01`), withYear ? 'MMM yyyy' : 'MMM');
+}
+
+/** The calendar date `days` away from `date` (negative goes back). */
+export function addDaysToIsoDate(date: IsoDate, days: number): IsoDate {
+  return toIsoDate(addDays(parseIsoDate(date), days));
+}
+
+/**
+ * A day heading relative to today: "Today", "Yesterday", or the weekday and
+ * date, with a short form for narrow screens and the full date for screen
+ * readers.
+ */
+export function formatDayHeading(
+  date: IsoDate,
+  today: IsoDate,
+): { long: string; short: string; full: string } {
+  const day = parseIsoDate(date);
+  const full = format(day, 'EEEE d MMMM yyyy');
+  if (date === today) return { long: 'Today', short: 'Today', full };
+  if (date === addDaysToIsoDate(today, -1)) return { long: 'Yesterday', short: 'Yesterday', full };
+  return { long: format(day, 'EEE d MMM yyyy'), short: format(day, 'EEE d MMM'), full };
 }

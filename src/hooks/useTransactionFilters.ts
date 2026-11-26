@@ -49,10 +49,16 @@ export function useTransactionFilters() {
     [write],
   );
 
-  /** Clears every filter but keeps the chosen sort order. */
+  /** Clears every filter (custom dates included) but keeps the month and the sort order. */
   const resetFilters = useCallback(() => {
-    const current = latestParams.current;
-    write(writeFilters(current, { ...DEFAULT_FILTERS, sort: parseFilters(current).sort }));
+    const current = parseFilters(latestParams.current);
+    write(
+      writeFilters(latestParams.current, {
+        ...DEFAULT_FILTERS,
+        month: current.month,
+        sort: current.sort,
+      }),
+    );
   }, [write]);
 
   return { filters, updateFilters, resetFilters };

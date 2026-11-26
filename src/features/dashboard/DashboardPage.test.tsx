@@ -151,7 +151,7 @@ describe('Dashboard', () => {
   it('updates immediately when a transaction is deleted', async () => {
     const { user } = renderRoute('/', { repository: seeded(...sample) });
 
-    await user.click(screen.getByRole('button', { name: 'Actions for Rent' }));
+    await user.click(screen.getByRole('button', { name: 'Actions for Rent, 2 Nov 2026' }));
     await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     await user.click(screen.getByRole('button', { name: 'Delete transaction' }));
 
@@ -161,7 +161,7 @@ describe('Dashboard', () => {
   it('edits a transaction from its row menu', async () => {
     const { user } = renderRoute('/', { repository: seeded(...sample) });
 
-    await user.click(screen.getByRole('button', { name: 'Actions for Rent' }));
+    await user.click(screen.getByRole('button', { name: 'Actions for Rent, 2 Nov 2026' }));
     await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
 
     expect(screen.getByRole('dialog', { name: 'Edit transaction' })).toBeInTheDocument();

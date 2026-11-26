@@ -135,15 +135,18 @@ describe('Recurring page', () => {
 describe('Catching up when the app opens', () => {
   it('adds due payments, saves them, says so, and labels them', async () => {
     const repository = seeded(makeSchedule({ startDate: '2026-10-01', nextDueDate: '2026-10-01' }));
-    const { user } = renderRoute('/transactions', { repository });
+    const { user } = renderRoute('/transactions?month=all', { repository });
 
     expect(
       screen.getByRole('status', { name: /2 recurring transactions were added/ }),
     ).toBeVisible();
     expect(repository.saved?.transactions).toHaveLength(2);
     expect(repository.saved?.recurringSchedules[0]?.nextDueDate).toBe('2026-12-01');
-    // One label per added transaction (the navigation link is outside <main>).
-    expect(within(screen.getByRole('main')).getAllByText('Recurring')).toHaveLength(2);
+    // One label per added transaction row.
+    const recurringRows = within(screen.getByRole('main'))
+      .getAllByRole('row')
+      .filter((row) => row.textContent.includes('Recurring'));
+    expect(recurringRows).toHaveLength(2);
 
     await user.click(screen.getByRole('button', { name: 'Dismiss message' }));
     expect(screen.queryByText(/recurring transactions were added/)).not.toBeInTheDocument();

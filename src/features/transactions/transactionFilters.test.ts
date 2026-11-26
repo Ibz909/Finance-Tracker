@@ -3,6 +3,7 @@ import type { Transaction } from '../../models/transaction';
 import { makeTransaction } from '../../test/fixtures';
 import type { TransactionFilters } from './transactionFilters';
 import {
+  resolvePeriod,
   applyFilterChange,
   countActiveFilters,
   dateRangeError,
@@ -145,6 +146,7 @@ describe('URL parameters', () => {
       categoryId: 'food_groceries',
       from: '2026-10-01',
       to: '2026-11-30',
+      month: null,
       sort: 'amount-desc',
     };
     const params = writeFilters(new URLSearchParams('other=keep'), filters);
@@ -159,7 +161,9 @@ describe('URL parameters', () => {
   it('ignores anything invalid instead of trusting it', () => {
     expect(
       parseFilters(
-        new URLSearchParams('type=refund&category=yachts&from=2026-02-30&to=tomorrow&sort=random'),
+        new URLSearchParams(
+          'type=refund&category=yachts&from=2026-02-30&to=tomorrow&month=2026-13&sort=random',
+        ),
       ),
     ).toEqual(DEFAULT_FILTERS);
   });
@@ -168,5 +172,68 @@ describe('URL parameters', () => {
     expect(
       parseFilters(new URLSearchParams('type=income&category=rent_housing')).categoryId,
     ).toBeNull();
+  });
+});
+
+describe('month period', () => {
+  const inNovember = makeTransaction({ id: 'nov', date: '2026-11-30' });
+  const inDecember = makeTransaction({ id: 'dec', date: '2026-12-01' });
+  const inJanuary = makeTransaction({ id: 'jan', date: '2027-01-01' });
+  const leapDay = makeTransaction({ id: 'leap', date: '2028-02-29' });
+  const all = [inNovember, inDecember, inJanuary, leapDay];
+  const ids = (filters: TransactionFilters) => filterTransactions(all, filters).map((t) => t.id);
+
+  it('shows only the chosen calendar month, across year boundaries and leap days', () => {
+    expect(ids({ ...DEFAULT_FILTERS, month: '2026-12' })).toEqual(['dec']);
+    expect(ids({ ...DEFAULT_FILTERS, month: '2027-01' })).toEqual(['jan']);
+    expect(ids({ ...DEFAULT_FILTERS, month: '2028-02' })).toEqual(['leap']);
+  });
+
+  it('shows everything for All time, and for no month at all', () => {
+    expect(ids({ ...DEFAULT_FILTERS, month: 'all' })).toHaveLength(4);
+    expect(ids(DEFAULT_FILTERS)).toHaveLength(4);
+  });
+
+  it('lets a custom date range take over from the month', () => {
+    expect(
+      ids({ ...DEFAULT_FILTERS, month: '2026-11', from: '2026-12-01', to: '2027-01-31' }),
+    ).toEqual(['dec', 'jan']);
+  });
+
+  it('clears custom dates when a month or All time is picked', () => {
+    const custom = { ...DEFAULT_FILTERS, from: '2026-10-01', to: '2026-10-31' };
+    expect(applyFilterChange(custom, { month: '2026-11' })).toMatchObject({
+      month: '2026-11',
+      from: null,
+      to: null,
+    });
+    expect(applyFilterChange(custom, { month: 'all' })).toMatchObject({ from: null, to: null });
+  });
+
+  it('resolves which period is shown, using the shared month when none is chosen', () => {
+    expect(resolvePeriod(DEFAULT_FILTERS, '2026-11')).toEqual({ kind: 'month', month: '2026-11' });
+    expect(resolvePeriod({ ...DEFAULT_FILTERS, month: '2026-03' }, '2026-11')).toEqual({
+      kind: 'month',
+      month: '2026-03',
+    });
+    expect(resolvePeriod({ ...DEFAULT_FILTERS, month: 'all' }, '2026-11')).toEqual({ kind: 'all' });
+    expect(
+      resolvePeriod({ ...DEFAULT_FILTERS, month: 'all', from: '2026-10-01' }, '2026-11'),
+    ).toEqual({ kind: 'custom', from: '2026-10-01', to: null });
+  });
+
+  it('keeps the month and a custom range from the URL, letting the range win', () => {
+    const params = new URLSearchParams('month=2026-11&from=2026-10-01&to=2026-10-31');
+    const filters = parseFilters(params);
+    expect(filters).toMatchObject({ month: '2026-11', from: '2026-10-01', to: '2026-10-31' });
+    expect(resolvePeriod(filters, '2026-11').kind).toBe('custom');
+  });
+
+  it('round-trips the month and All time in the URL', () => {
+    for (const month of ['2026-11', 'all'] as const) {
+      const params = writeFilters(new URLSearchParams(), { ...DEFAULT_FILTERS, month });
+      expect(params.toString()).toBe(`month=${month}`);
+      expect(parseFilters(params).month).toBe(month);
+    }
   });
 });
