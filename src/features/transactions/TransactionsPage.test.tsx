@@ -47,21 +47,32 @@ function seeded(...transactions: Parameters<typeof makeTransaction>[0][]) {
   });
 }
 
+/** The table's transaction rows (date headings and the header row excluded). */
 function rows() {
-  const region = screen.getByRole('region', { name: 'All transactions' });
-  return within(region).getAllByRole('listitem');
+  const region = screen.getByRole('table');
+  return within(region)
+    .getAllByRole('row')
+    .filter((row) => row.querySelector('td'));
+}
+
+async function chooseAction(user: UserEvent, description: string, action: 'Edit' | 'Delete') {
+  // Menu names end with the date, which keeps same-named rows apart.
+  await user.click(
+    screen.getByRole('button', { name: new RegExp(`^Actions for ${description}, `) }),
+  );
+  await user.click(screen.getByRole('menuitem', { name: action }));
 }
 
 describe('Transactions page', () => {
   it('shows a helpful empty state', () => {
-    renderRoute('/transactions');
+    renderRoute('/transactions?month=all');
 
     expect(screen.getByRole('heading', { name: 'No transactions yet' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add your first transaction' })).toBeInTheDocument();
   });
 
   it('lists transactions newest first with type in words and signed amounts', () => {
-    renderRoute('/transactions', {
+    renderRoute('/transactions?month=all', {
       repository: seeded(
         { description: 'Older shop', date: '2026-11-01', amountPence: 1250 },
         {
@@ -76,25 +87,44 @@ describe('Transactions page', () => {
 
     const [first, second] = rows();
     expect(first).toHaveTextContent('Salary');
-    expect(first).toHaveTextContent('Income');
-    expect(first).toHaveTextContent('+£2,850.00');
-    expect(first).toHaveTextContent('20 Nov 2026');
+    expect(first).toHaveTextContent('+£2,850.00 income');
+    // Sorted by date, each day gets a heading instead of a date on every row.
+    expect(screen.getByRole('rowheader', { name: /Friday 20 November 2026/ })).toBeInTheDocument();
     expect(second).toHaveTextContent('Older shop');
     expect(second).toHaveTextContent('Food & Groceries');
-    expect(second).toHaveTextContent('−£12.50');
+    expect(second).toHaveTextContent('−£12.50 expense');
     expect(screen.getByText('2 transactions')).toBeInTheDocument();
   });
 
-  it('labels demo records', () => {
-    renderRoute('/transactions', { repository: seeded({ description: 'Sample', isDemo: true }) });
+  it('gives rows with the same description distinct menu names', () => {
+    renderRoute('/transactions?month=all', {
+      repository: seeded(
+        { description: 'Haircut', date: '2026-11-24' },
+        { description: 'Haircut', date: '2026-10-24' },
+      ),
+    });
 
-    expect(screen.getByText('Demo').closest('li')).toHaveTextContent('Sample');
+    expect(
+      screen.getByRole('button', { name: 'Actions for Haircut, 24 Nov 2026' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Actions for Haircut, 24 Oct 2026' }),
+    ).toBeInTheDocument();
+  });
+
+  it('labels demo records', () => {
+    renderRoute('/transactions?month=all', {
+      repository: seeded({ description: 'Sample', isDemo: true }),
+    });
+
+    expect(rows()[0]).toHaveTextContent('Sample');
+    expect(rows()[0]).toHaveTextContent('· Demo');
   });
 });
 
 describe('Adding a transaction', () => {
   it('adds a transaction from the top bar and saves it', async () => {
-    const { user, repository } = renderRoute('/transactions');
+    const { user, repository } = renderRoute('/transactions?month=all');
 
     await user.click(screen.getByRole('button', { name: 'Add transaction' }));
     expect(dialog()).toHaveAccessibleName('Add transaction');
@@ -127,7 +157,7 @@ describe('Adding a transaction', () => {
   });
 
   it('can be started from the empty state', async () => {
-    const { user } = renderRoute('/transactions');
+    const { user } = renderRoute('/transactions?month=all');
 
     await user.click(screen.getByRole('button', { name: 'Add your first transaction' }));
 
@@ -135,7 +165,7 @@ describe('Adding a transaction', () => {
   });
 
   it('shows linked, accessible errors and saves nothing when input is invalid', async () => {
-    const { user, repository } = renderRoute('/transactions');
+    const { user, repository } = renderRoute('/transactions?month=all');
     await user.click(screen.getByRole('button', { name: 'Add transaction' }));
     await fillTransactionForm(user, { amount: '12.345' });
 
@@ -152,7 +182,7 @@ describe('Adding a transaction', () => {
   });
 
   it('offers only matching categories and clears one that no longer fits', async () => {
-    const { user } = renderRoute('/transactions');
+    const { user } = renderRoute('/transactions?month=all');
     await user.click(screen.getByRole('button', { name: 'Add transaction' }));
     const category = within(dialog()).getByLabelText<HTMLSelectElement>('Category');
 
@@ -165,7 +195,7 @@ describe('Adding a transaction', () => {
   });
 
   it('closes without saving on Cancel or Escape', async () => {
-    const { user, repository } = renderRoute('/transactions');
+    const { user, repository } = renderRoute('/transactions?month=all');
     const addButton = screen.getByRole('button', { name: 'Add transaction' });
 
     await user.click(addButton);
@@ -182,7 +212,9 @@ describe('Adding a transaction', () => {
   });
 
   it('keeps added transactions after a refresh', async () => {
-    const first = renderRoute('/transactions', { repository: createLocalStorageRepository() });
+    const first = renderRoute('/transactions?month=all', {
+      repository: createLocalStorageRepository(),
+    });
     await first.user.click(screen.getByRole('button', { name: 'Add transaction' }));
     await fillTransactionForm(first.user, {
       amount: '3.20',
@@ -192,7 +224,7 @@ describe('Adding a transaction', () => {
     await first.user.click(within(dialog()).getByRole('button', { name: 'Add transaction' }));
     first.unmount();
 
-    renderRoute('/transactions', { repository: createLocalStorageRepository() });
+    renderRoute('/transactions?month=all', { repository: createLocalStorageRepository() });
 
     expect(rows()[0]).toHaveTextContent('Coffee');
     expect(rows()[0]).toHaveTextContent('−£3.20');
@@ -207,9 +239,9 @@ describe('Editing a transaction', () => {
       amountPence: 4599,
       notes: 'Big shop',
     });
-    const { user } = renderRoute('/transactions', { repository });
+    const { user } = renderRoute('/transactions?month=all', { repository });
 
-    await user.click(screen.getByRole('button', { name: 'Edit Groceries' }));
+    await chooseAction(user, 'Groceries', 'Edit');
 
     const form = within(dialog());
     expect(dialog()).toHaveAccessibleName('Edit transaction');
@@ -236,11 +268,11 @@ describe('Editing a transaction', () => {
 
 describe('Deleting a transaction', () => {
   it('asks for confirmation, and Cancel keeps the transaction', async () => {
-    const { user, repository } = renderRoute('/transactions', {
+    const { user, repository } = renderRoute('/transactions?month=all', {
       repository: seeded({ description: 'Gym', amountPence: 3500, date: '2026-11-05' }),
     });
 
-    await user.click(screen.getByRole('button', { name: 'Delete Gym' }));
+    await chooseAction(user, 'Gym', 'Delete');
 
     const confirm = screen.getByRole('dialog', { name: 'Delete “Gym”?' });
     expect(confirm).toHaveAccessibleDescription(
@@ -255,11 +287,11 @@ describe('Deleting a transaction', () => {
   });
 
   it('removes the transaction once confirmed', async () => {
-    const { user, repository } = renderRoute('/transactions', {
+    const { user, repository } = renderRoute('/transactions?month=all', {
       repository: seeded({ description: 'Gym' }, { description: 'Bus' }),
     });
 
-    await user.click(screen.getByRole('button', { name: 'Delete Gym' }));
+    await chooseAction(user, 'Gym', 'Delete');
     await user.click(screen.getByRole('button', { name: 'Delete transaction' }));
 
     expect(screen.queryByText('Gym')).not.toBeInTheDocument();

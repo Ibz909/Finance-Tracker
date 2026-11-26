@@ -81,9 +81,13 @@ describe('Exporting', () => {
   });
 
   it('exports only what the filters show on the Transactions page', async () => {
-    const { user } = renderRoute('/transactions?type=income', { repository: seeded(shop, salary) });
+    const { user } = renderRoute('/transactions?month=all&type=income', {
+      repository: seeded(shop, salary),
+    });
 
-    await user.click(screen.getByRole('button', { name: 'Export 1 transaction as CSV' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Export 1 transaction (All time · Income) as CSV' }),
+    );
 
     const text = await downloadedText();
     expect(text).toContain('Salary');

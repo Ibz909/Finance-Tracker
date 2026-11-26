@@ -66,12 +66,19 @@ describe('Accessibility (axe-core, WCAG 2.2 A/AA)', () => {
     ['/savings', 'Add savings goal', 'Add savings goal'],
     ['/savings', 'Add money to Summer holiday', 'Add money to Summer holiday'],
     ['/settings', 'Reset all data', 'Delete all data?'],
-    ['/transactions', 'Delete Monthly salary', 'Delete “Monthly salary”?'],
+    [
+      '/transactions',
+      'Actions for Monthly salary, 1 Nov 2026 > Delete',
+      'Delete “Monthly salary”?',
+    ],
   ])('%s: the “%s” dialog', async (path, button, dialogName) => {
     const { user } = renderRoute(path, { repository: demoRepository() });
-    const [opener] = screen.getAllByRole('button', { name: button });
-    if (!opener) throw new Error(`No “${button}” button`);
+    // "Menu > Item" opens a row's menu, then chooses the item.
+    const [buttonName, menuItem] = button.split(' > ');
+    const [opener] = screen.getAllByRole('button', { name: buttonName });
+    if (!opener) throw new Error(`No “${String(buttonName)}” button`);
     await user.click(opener);
+    if (menuItem) await user.click(screen.getByRole('menuitem', { name: menuItem }));
     await screen.findByRole('dialog', { name: dialogName });
     await expectNoAccessibilityViolations();
   });
