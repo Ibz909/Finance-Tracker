@@ -8,7 +8,7 @@ web
 
 ## Users
 
-**Primary: everyday users.** People in the UK managing their own money in pounds sterling. They record income and spending, set monthly limits, keep track of regular bills and salary, and save towards goals. They use it on a laptop or a phone, often in a short check-in ("how am I doing this month?") rather than a long session.
+**Primary: everyday users.** People in the UK managing their own money in pounds sterling. They record income and spending, set monthly limits, keep track of regular bills and salary, and save towards goals. They use it on a laptop or a phone, often in a short check-in ("how am I doing this month?") rather than a long session. They don't need any financial knowledge to use it: every figure, status and term must make sense to someone who has never kept a budget, so plain language and short explanations matter more than finance jargon.
 
 **Secondary: recruiters and hiring managers.** The app is also the owner's portfolio project. These visitors arrive through the live link or the GitHub repository, usually for a few minutes, and turn on Demo data to see it working. They judge the project by how well it does the everyday user's job, so design for the everyday user first and never at their expense.
 
