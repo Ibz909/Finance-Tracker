@@ -25,14 +25,25 @@ function seeded(...transactions: Transaction[]) {
   return createMemoryRepository({ ...createEmptyAppData(), transactions });
 }
 
-function card(label: string) {
-  return screen.getByRole('region', { name: label });
+function region(name: string | RegExp) {
+  return screen.getByRole('region', { name });
 }
 
+/** The net cash flow figure and its sentence. */
+function hero() {
+  return region(/^Net cash flow/);
+}
+
+/** A supporting figure (income, expenses, savings rate) with its label. */
+function metric(label: string): HTMLElement {
+  const term = screen.getByText(label, { selector: 'dt' });
+  if (!term.parentElement) throw new Error(`No figure for ${label}`);
+  return term.parentElement;
+}
+
+/** Body rows of the recent activity table. */
 function recentRows() {
-  return within(screen.getByRole('region', { name: 'Recent transactions' })).queryAllByRole(
-    'listitem',
-  );
+  return within(region('Recent activity')).queryAllByRole('row').slice(1);
 }
 
 const sample = [
@@ -54,31 +65,31 @@ describe('Dashboard', () => {
 
   it.each([
     ['a savings goal', { savingsGoals: [makeGoal({ name: 'Holiday' })] }, 'Savings goals'],
-    ['a budget', { budgets: [makeBudget()] }, 'Budget progress'],
+    ['a budget', { budgets: [makeBudget()] }, 'Monthly budget'],
     [
       'a recurring transaction not yet due',
       { recurringSchedules: [makeSchedule({ nextDueDate: '2026-12-01' })] },
-      'Recent transactions',
+      'Recent activity',
     ],
-  ])('shows the dashboard, not the welcome, with only %s', (_label, data, region) => {
+  ])('shows the overview, not the welcome, with only %s', (_label, data, section) => {
     renderRoute('/', { repository: createMemoryRepository({ ...createEmptyAppData(), ...data }) });
 
     expect(
       screen.queryByRole('heading', { name: 'Welcome to Finance Tracker' }),
     ).not.toBeInTheDocument();
-    expect(card(region)).toBeVisible();
-    expect(card('Recent transactions')).toHaveTextContent('No transactions in November 2026.');
+    expect(region(section)).toBeVisible();
+    expect(region('Recent activity')).toHaveTextContent('No transactions in November 2026.');
   });
 
   it('summarises the current month from stored transactions', () => {
     renderRoute('/', { repository: seeded(...sample) });
 
-    expect(card('Income')).toHaveTextContent('£2,500.00');
-    expect(card('Expenses')).toHaveTextContent('£995.00');
-    expect(card('Net cash flow')).toHaveTextContent('+£1,505.00');
-    expect(card('Net cash flow')).toHaveTextContent('Surplus');
-    expect(card('Savings rate')).toHaveTextContent('60.2%'); // 150500 / 250000
-    expect(card('Savings rate')).toHaveTextContent('Estimate from cash flow');
+    expect(region('Net cash flow this month')).toHaveTextContent('+£1,505.00');
+    expect(hero()).toHaveTextContent('You’ve spent less than you’ve earned this month.');
+    expect(metric('Income')).toHaveTextContent('£2,500.00');
+    expect(metric('Expenses')).toHaveTextContent('£995.00');
+    expect(metric('Savings rate')).toHaveTextContent('60.2%'); // 150500 / 250000
+    expect(metric('Savings rate')).toHaveTextContent('Estimate from cash flow');
   });
 
   it('lists the month’s recent transactions, newest first, and nothing from other months', () => {
@@ -87,6 +98,8 @@ describe('Dashboard', () => {
     expect(
       recentRows().map((row) => within(row).getByText(/salary|Rent|Groceries/).textContent),
     ).toEqual(['Groceries', 'Rent', 'November salary']);
+    expect(recentRows()[0]).toHaveTextContent('−£45.00 expense');
+    expect(recentRows()[2]).toHaveTextContent('+£2,500.00 income');
   });
 
   it('shows at most five recent transactions', () => {
@@ -96,7 +109,10 @@ describe('Dashboard', () => {
     renderRoute('/', { repository: seeded(...many) });
 
     expect(recentRows()).toHaveLength(5);
-    expect(screen.getByRole('link', { name: 'View all' })).toHaveAttribute('href', '/transactions');
+    expect(screen.getByRole('link', { name: 'All transactions' })).toHaveAttribute(
+      'href',
+      '/transactions',
+    );
   });
 
   it('explains a deficit and a negative savings rate', () => {
@@ -104,17 +120,17 @@ describe('Dashboard', () => {
       repository: seeded(income(100000, '2026-11-01'), expense(125000, '2026-11-03')),
     });
 
-    expect(card('Net cash flow')).toHaveTextContent('−£250.00');
-    expect(card('Net cash flow')).toHaveTextContent('Deficit');
-    expect(card('Savings rate')).toHaveTextContent('−25.0%');
+    expect(hero()).toHaveTextContent('−£250.00');
+    expect(hero()).toHaveTextContent('You’ve spent more than you’ve earned this month.');
+    expect(metric('Savings rate')).toHaveTextContent('−25.0%');
   });
 
   it('shows a dash, not NaN or Infinity, when there is no income', () => {
     renderRoute('/', { repository: seeded(expense(5000, '2026-11-03')) });
 
-    const rate = card('Savings rate');
+    const rate = metric('Savings rate');
     expect(rate).toHaveTextContent('—');
-    expect(rate).toHaveTextContent('No income this month');
+    expect(rate).toHaveTextContent('No income, so no rate to show');
     expect(rate).not.toHaveTextContent(/NaN|Infinity/);
   });
 
@@ -130,17 +146,49 @@ describe('Dashboard', () => {
     await user.type(form.getByLabelText('Date'), '2026-11-15');
     await user.click(form.getByRole('button', { name: 'Add transaction' }));
 
-    expect(card('Expenses')).toHaveTextContent('£1,000.00');
+    expect(metric('Expenses')).toHaveTextContent('£1,000.00');
     expect(recentRows()[0]).toHaveTextContent('Bus');
   });
 
   it('updates immediately when a transaction is deleted', async () => {
     const { user } = renderRoute('/', { repository: seeded(...sample) });
 
-    await user.click(screen.getByRole('button', { name: 'Delete Rent' }));
+    await user.click(screen.getByRole('button', { name: 'Actions for Rent' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     await user.click(screen.getByRole('button', { name: 'Delete transaction' }));
 
-    expect(card('Expenses')).toHaveTextContent('£45.00');
+    expect(metric('Expenses')).toHaveTextContent('£45.00');
+  });
+
+  it('edits a transaction from its row menu', async () => {
+    const { user } = renderRoute('/', { repository: seeded(...sample) });
+
+    await user.click(screen.getByRole('button', { name: 'Actions for Rent' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
+
+    expect(screen.getByRole('dialog', { name: 'Edit transaction' })).toBeInTheDocument();
+  });
+
+  it('charts cash flow from real history, over a range the user picks', async () => {
+    const { user } = renderRoute('/', { repository: seeded(...sample) });
+    const chart = region('Cash flow');
+    const monthRows = () => within(chart).getAllByRole('row', { hidden: true }).slice(1);
+
+    expect(within(chart).getByRole('radio', { name: '6 months' })).toBeChecked();
+    expect(monthRows()).toHaveLength(6);
+    expect(chart).toHaveTextContent('£4,900.00 in and £3,995.00 out');
+
+    await user.click(within(chart).getByRole('radio', { name: '3 months' }));
+
+    expect(monthRows()).toHaveLength(3);
+    expect(monthRows().at(-1)).toHaveTextContent('November 2026');
+  });
+
+  it('no longer repeats the Analytics spending charts', () => {
+    renderRoute('/', { repository: seeded(...sample) });
+
+    expect(screen.queryByRole('region', { name: 'Spending over time' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Spending by category' })).not.toBeInTheDocument();
   });
 });
 
@@ -154,9 +202,9 @@ describe('Reporting month', () => {
     await user.click(within(picker).getByRole('button', { name: 'Previous month, October 2026' }));
 
     expect(picker).toHaveTextContent('October 2026');
-    expect(card('Income')).toHaveTextContent('£2,400.00');
-    expect(card('Expenses')).toHaveTextContent('£3,000.00');
-    expect(card('Net cash flow')).toHaveTextContent('−£600.00');
+    expect(metric('Income')).toHaveTextContent('£2,400.00');
+    expect(metric('Expenses')).toHaveTextContent('£3,000.00');
+    expect(region('Net cash flow, October 2026')).toHaveTextContent('−£600.00');
     expect(recentRows().map((row) => row.textContent)).toEqual([
       expect.stringContaining('October salary'),
       expect.stringContaining('Holiday'),
@@ -165,7 +213,7 @@ describe('Reporting month', () => {
     await user.click(within(picker).getByRole('button', { name: 'This month' }));
 
     expect(picker).toHaveTextContent('November 2026');
-    expect(card('Income')).toHaveTextContent('£2,500.00');
+    expect(metric('Income')).toHaveTextContent('£2,500.00');
   });
 
   it('shows zeros and an add shortcut for a month with no transactions', async () => {
@@ -173,8 +221,8 @@ describe('Reporting month', () => {
 
     await user.click(screen.getByRole('button', { name: 'Next month, December 2026' }));
 
-    expect(card('Income')).toHaveTextContent('£0.00');
-    expect(card('Net cash flow')).toHaveTextContent('Income and expenses are equal');
+    expect(metric('Income')).toHaveTextContent('£0.00');
+    expect(hero()).toHaveTextContent('Nothing recorded in December 2026 yet.');
     expect(screen.getByText('No transactions in December 2026.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add a transaction' })).toBeInTheDocument();
   });
