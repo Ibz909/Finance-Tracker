@@ -10,19 +10,19 @@ export const GOAL_STATUS_DISPLAY: Record<
   'in-progress': {
     label: 'In progress',
     icon: CircleDashed,
-    classes: 'bg-muted text-muted-foreground',
+    classes: 'text-muted-foreground',
     bar: 'accent',
   },
   reached: {
     label: 'Goal reached',
     icon: CircleCheck,
-    classes: 'bg-positive/10 text-positive',
+    classes: 'text-positive',
     bar: 'accent',
   },
   overdue: {
     label: 'Target date passed',
     icon: TriangleAlert,
-    classes: 'bg-warning/15 text-warning',
+    classes: 'text-warning',
     bar: 'warning',
   },
 };

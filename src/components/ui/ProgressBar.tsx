@@ -29,10 +29,10 @@ export function ProgressBar({ percent, label, tone, valueText }: ProgressBarProp
       aria-valuemax={100}
       aria-valuenow={clamped}
       aria-valuetext={valueText ?? `${String(percent)}% used`}
-      className="h-2.5 w-full overflow-hidden rounded-full bg-muted"
+      className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
     >
       <div
-        className={`h-full rounded-full transition-[width] duration-500 ease-out ${FILL[tone]}`}
+        className={`h-full rounded-full transition-[width] duration-300 ease-out ${FILL[tone]}`}
         style={{ width: `${String(clamped)}%` }}
       />
     </div>

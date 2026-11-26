@@ -8,7 +8,7 @@ interface NavListProps {
 
 export function NavList({ onNavigate }: NavListProps) {
   return (
-    <ul className="flex flex-col gap-1">
+    <ul className="flex flex-col gap-0.5">
       {NAV_ITEMS.map(({ path, label, icon: Icon }) => (
         <li key={path}>
           <NavLink
@@ -17,14 +17,17 @@ export function NavList({ onNavigate }: NavListProps) {
             onClick={onNavigate}
             className={({ isActive }) =>
               [
-                'relative flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors duration-150',
+                'group flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150',
                 isActive
-                  ? 'bg-accent/10 text-accent before:absolute before:inset-y-2 before:left-0 before:w-1 before:rounded-full before:bg-accent'
+                  ? 'bg-muted text-foreground'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               ].join(' ')
             }
           >
-            <Icon aria-hidden="true" className="size-5 shrink-0" />
+            <Icon
+              aria-hidden="true"
+              className="size-[18px] shrink-0 group-aria-[current=page]:text-accent"
+            />
             {label}
           </NavLink>
         </li>

@@ -37,7 +37,7 @@ export function IncomeExpenseChart({ totals }: { totals: readonly MonthTotals[] 
         margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
         accessibilityLayer={false}
       >
-        <CartesianGrid vertical={false} stroke={CHART_COLORS.grid} />
+        <CartesianGrid vertical={false} stroke={CHART_COLORS.grid} strokeDasharray="3 4" />
         <XAxis
           dataKey="label"
           tickLine={false}
@@ -58,17 +58,23 @@ export function IncomeExpenseChart({ totals }: { totals: readonly MonthTotals[] 
           cursor={{ fill: 'var(--muted)' }}
           {...TOOLTIP_STYLE}
         />
-        <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+        {/* Income first, matching the bars, rather than sorted alphabetically. */}
+        <Legend
+          iconType="circle"
+          iconSize={8}
+          itemSorter={(item) => (item.value === 'Income' ? 0 : 1)}
+          wrapperStyle={{ fontSize: 12 }}
+        />
         <Bar
           dataKey="Income"
           fill={CHART_COLORS.income}
-          radius={[4, 4, 0, 0]}
+          radius={[2, 2, 0, 0]}
           isAnimationActive={!reduceMotion}
         />
         <Bar
           dataKey="Expenses"
           fill={CHART_COLORS.expenses}
-          radius={[4, 4, 0, 0]}
+          radius={[2, 2, 0, 0]}
           isAnimationActive={!reduceMotion}
         />
       </BarChart>

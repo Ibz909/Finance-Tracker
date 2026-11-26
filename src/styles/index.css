@@ -17,24 +17,36 @@
 :root {
   color-scheme: light;
 
-  --background: oklch(0.985 0.002 247);
-  --surface: oklch(1 0 0);
-  --foreground: oklch(0.21 0.01 260);
-  --muted-foreground: oklch(0.5 0.015 260);
-  --muted: oklch(0.965 0.003 260);
-  --border: oklch(0.92 0.004 260);
-  /* Form fields need a 3:1 outline (WCAG 1.4.11); cards keep the softer --border. */
-  --input-border: oklch(0.64 0.01 260);
+  /* The Quiet Ledger, daylight: the same roles as dark, lightness inverted. */
+  --background: #f6f7f8;
+  --surface: #ffffff;
+  /* Raised tone: icon tiles, progress tracks, hovered rows, menus. */
+  --muted: #eef0f2;
+  --foreground: #111214;
+  --muted-foreground: #5c5f66;
+  /* Hairlines: card edges and dividers only, never a control's only edge. */
+  --border: #e3e5e8;
+  /* Form fields need a 3:1 outline (WCAG 1.4.11); structure keeps --border. */
+  --input-border: #8b8f96;
 
-  --accent: oklch(0.5 0.11 170);
-  --accent-foreground: oklch(1 0 0);
+  /* Turquoise text, links, thin bars and focus. #38C4A0 is too pale on white
+     (2.2:1), so daylight uses a deeper turquoise; fills keep the signature. */
+  --accent: #0b7a62;
+  --accent-foreground: #ffffff;
+  --accent-fill: #38c4a0;
+  --accent-fill-foreground: #101113;
 
-  --positive: oklch(0.5 0.13 155);
-  --negative: oklch(0.53 0.19 25);
-  --negative-foreground: oklch(1 0 0);
-  --warning: oklch(0.5 0.12 60);
+  --positive: #0b7a62;
+  --negative: #c42b2b;
+  --negative-foreground: #ffffff;
+  --warning: #985800;
 
-  /* Category / chart palette: distinct hues at similar lightness. */
+  /* Income vs expenses: turquoise and a neutral grey, so spending isn't
+     framed as alarming by default. */
+  --chart-income: #0b7a62;
+  --chart-expense: #8b8f96;
+
+  /* Category palette: distinct hues at similar lightness. */
   --chart-1: oklch(0.6 0.13 170);
   --chart-2: oklch(0.62 0.16 40);
   --chart-3: oklch(0.58 0.15 255);
@@ -50,28 +62,32 @@
 }
 
 /*
- * Dark palette. Surfaces step up in lightness rather than relying on
- * shadows, and accent/status colours are lighter so text on dark surfaces
- * keeps at least WCAG AA contrast (4.5:1).
+ * The Quiet Ledger, the reference theme. Depth comes from three tones
+ * (background, surface, muted) and hairlines, not shadows.
  */
 .dark {
   color-scheme: dark;
 
-  --background: oklch(0.17 0.01 260);
-  --surface: oklch(0.21 0.012 260);
-  --foreground: oklch(0.96 0.005 260);
-  --muted-foreground: oklch(0.72 0.015 260);
-  --muted: oklch(0.26 0.012 260);
-  --border: oklch(0.3 0.012 260);
-  --input-border: oklch(0.55 0.012 260);
+  --background: #101113;
+  --surface: #181a1d;
+  --muted: #22252a;
+  --foreground: #f4f4f5;
+  --muted-foreground: #a1a1aa;
+  --border: #2c2e33;
+  --input-border: #6b6f78;
 
-  --accent: oklch(0.74 0.13 170);
-  --accent-foreground: oklch(0.18 0.02 170);
+  --accent: #38c4a0;
+  --accent-foreground: #101113;
+  --accent-fill: #38c4a0;
+  --accent-fill-foreground: #101113;
 
-  --positive: oklch(0.74 0.15 155);
-  --negative: oklch(0.71 0.17 25);
-  --negative-foreground: oklch(0.18 0.02 25);
-  --warning: oklch(0.82 0.14 75);
+  --positive: #38c4a0;
+  --negative: #f87171;
+  --negative-foreground: #101113;
+  --warning: #f8bd68;
+
+  --chart-income: #38c4a0;
+  --chart-expense: #6b6f78;
 
   --chart-1: oklch(0.74 0.13 170);
   --chart-2: oklch(0.74 0.15 40);
@@ -97,10 +113,14 @@
   --color-input-border: var(--input-border);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-fill-foreground: var(--accent-fill-foreground);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
   --color-negative-foreground: var(--negative-foreground);
   --color-warning: var(--warning);
+  --color-chart-income: var(--chart-income);
+  --color-chart-expense: var(--chart-expense);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -114,12 +134,35 @@
   --color-chart-11: var(--chart-11);
   --color-chart-12: var(--chart-12);
 
-  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Geist Variable', 'Geist', ui-sans-serif, system-ui, sans-serif;
+
+  /* Restrained corners: 4px small parts, 6px controls, 10px panels; larger steps are capped. */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 6px;
+  --radius-xl: 10px;
+  --radius-2xl: 10px;
+  --radius-3xl: 10px;
+
+  /* Flat by default; only dialogs and menus (shadow-lg and up) cast shadows. */
+  --shadow-2xs: 0 0 #0000;
+  --shadow-xs: 0 0 #0000;
+  --shadow-sm: 0 0 #0000;
+  --shadow-md: 0 0 #0000;
 }
 
 @layer base {
   html {
     @apply bg-background font-sans text-foreground antialiased;
+    /* Money lines up digit for digit everywhere. */
+    font-variant-numeric: tabular-nums;
+    caret-color: var(--accent);
+    scrollbar-color: var(--input-border) transparent;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent-fill) 35%, transparent);
+    color: var(--foreground);
   }
 
   /* One consistent, clearly visible keyboard focus ring everywhere. */

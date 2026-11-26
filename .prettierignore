@@ -2,3 +2,7 @@ dist
 coverage
 node_modules
 package-lock.json
+
+# Written by the Impeccable design tool, not by hand
+.claude
+.impeccable

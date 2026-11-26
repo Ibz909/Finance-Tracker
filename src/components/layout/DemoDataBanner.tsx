@@ -4,7 +4,7 @@ import { hasDemoData } from '../../features/demo/demoData';
 import { useAppData } from '../../hooks/useAppData';
 
 /**
- * Persistent reminder that fictional data is on screen, so demo figures are
+ * A one-line reminder that fictional data is on screen, so demo figures are
  * never mistaken for real finances. Hidden on Settings, where the demo data
  * section explains it in full.
  */
@@ -15,15 +15,15 @@ export function DemoDataBanner() {
   if (!hasDemoData(data) || pathname === '/settings') return null;
 
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm">
-      <FlaskConical aria-hidden="true" className="size-4 shrink-0 text-accent" />
-      <p className="min-w-48 flex-1">
-        <span className="font-medium">You’re viewing fictional demo data.</span>{' '}
-        <span className="text-muted-foreground">It’s marked “Demo” wherever it appears.</span>
-      </p>
-      <Link to="/settings#demo-data" className="font-medium text-accent hover:underline">
-        Manage demo data
-      </Link>
-    </div>
+    <p className="mb-5 flex items-start gap-2 text-sm text-muted-foreground">
+      <FlaskConical aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-accent" />
+      <span>
+        <span className="font-medium text-foreground">Demo data</span> · fictional records, marked
+        “Demo” wherever they appear.{' '}
+        <Link to="/settings#demo-data" className="font-medium text-accent hover:underline">
+          Manage demo data
+        </Link>
+      </span>
+    </p>
   );
 }
