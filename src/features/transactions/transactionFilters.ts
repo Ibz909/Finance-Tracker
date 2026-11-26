@@ -1,7 +1,7 @@
 import { getCategory } from '../../constants/categories';
 import type { Transaction } from '../../models/transaction';
-import type { IsoDate } from '../../utils/dates';
-import { isDateInRange, isValidIsoDate } from '../../utils/dates';
+import type { IsoDate, MonthKey } from '../../utils/dates';
+import { isDateInMonth, isDateInRange, isValidIsoDate, isValidMonthKey } from '../../utils/dates';
 import { sortByNewest } from './transactionSelectors';
 
 export const TYPE_FILTERS = ['all', 'income', 'expense'] as const;
@@ -25,6 +25,13 @@ export interface TransactionFilters {
   /** Inclusive calendar-date bounds. */
   from: IsoDate | null;
   to: IsoDate | null;
+  /**
+   * The period shown: one calendar month, or everything. `null` means "the
+   * shared reporting month", resolved by the page. A custom from/to range
+   * takes precedence over it.
+   */
+  /** A month key, or "all" for All time. */
+  month: MonthKey | null;
   sort: TransactionSort;
 }
 
@@ -34,8 +41,21 @@ export const DEFAULT_FILTERS: TransactionFilters = {
   categoryId: null,
   from: null,
   to: null,
+  month: null,
   sort: 'date-desc',
 };
+
+/** What the list covers: a month, everything, or the custom dates from the Filters panel. */
+export type Period =
+  | { kind: 'month'; month: MonthKey }
+  | { kind: 'all' }
+  | { kind: 'custom'; from: IsoDate | null; to: IsoDate | null };
+
+export function resolvePeriod(filters: TransactionFilters, fallbackMonth: MonthKey): Period {
+  if (filters.from || filters.to) return { kind: 'custom', from: filters.from, to: filters.to };
+  if (filters.month === 'all') return { kind: 'all' };
+  return { kind: 'month', month: filters.month ?? fallbackMonth };
+}
 
 /* ---------- Predicates: a transaction is shown only if every one passes ---------- */
 
@@ -49,6 +69,11 @@ function predicatesFor(filters: TransactionFilters): Predicate[] {
   if (query) predicates.push((t) => normalise(t.description).includes(query));
   if (filters.type !== 'all') predicates.push((t) => t.type === filters.type);
   if (filters.categoryId) predicates.push((t) => t.categoryId === filters.categoryId);
+  // A month applies only when no custom range is set.
+  const { month } = filters;
+  if (!filters.from && !filters.to && month !== null && month !== 'all') {
+    predicates.push((t) => isDateInMonth(t.date, month));
+  }
   // An impossible range (from after to) is reported to the user and ignored.
   if (!dateRangeError(filters)) {
     const { from, to } = filters;
@@ -105,13 +130,18 @@ export function countActiveFilters(filters: TransactionFilters): number {
 
 /**
  * Applies a change, keeping the filters consistent: picking a type clears
- * a category of the other type (a salary is never an expense).
+ * a category of the other type (a salary is never an expense), and picking
+ * a month or "All time" clears a custom date range, so the two never compete.
  */
 export function applyFilterChange(
   current: TransactionFilters,
   changes: Partial<TransactionFilters>,
 ): TransactionFilters {
   const next = { ...current, ...changes };
+  if ('month' in changes) {
+    next.from = null;
+    next.to = null;
+  }
   if (next.categoryId && next.type !== 'all' && getCategory(next.categoryId)?.type !== next.type) {
     next.categoryId = null;
   }
@@ -126,6 +156,7 @@ const PARAM = {
   category: 'category',
   from: 'from',
   to: 'to',
+  month: 'month',
   sort: 'sort',
 };
 
@@ -138,8 +169,9 @@ export function parseFilters(params: URLSearchParams): TransactionFilters {
   const category = params.get(PARAM.category);
   const from = params.get(PARAM.from);
   const to = params.get(PARAM.to);
+  const month = params.get(PARAM.month);
 
-  return applyFilterChange(DEFAULT_FILTERS, {
+  const filters = applyFilterChange(DEFAULT_FILTERS, {
     query: params.get(PARAM.query) ?? '',
     type,
     categoryId: category && getCategory(category) ? category : null,
@@ -147,6 +179,12 @@ export function parseFilters(params: URLSearchParams): TransactionFilters {
     to: to && isValidIsoDate(to) ? to : null,
     sort: oneOf(TRANSACTION_SORTS, params.get(PARAM.sort)) ?? DEFAULT_FILTERS.sort,
   });
+  // Set directly, not as a change: changing the month clears custom dates,
+  // but reading a URL that has both must keep them (the range wins).
+  return {
+    ...filters,
+    month: month === 'all' || (month && isValidMonthKey(month)) ? month : null,
+  };
 }
 
 /** Writes only non-default values, keeping URLs short; other parameters are preserved. */
@@ -164,6 +202,7 @@ export function writeFilters(
   set(PARAM.category, filters.categoryId, false);
   set(PARAM.from, filters.from, false);
   set(PARAM.to, filters.to, false);
+  set(PARAM.month, filters.month, false);
   set(PARAM.sort, filters.sort, filters.sort === DEFAULT_FILTERS.sort);
   return next;
 }
